@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "/data/compartida/etls/recaudos/etl_pagos_bigquery.py", line 6, in <module>
+    import func_process
+ModuleNotFoundError: No module named 'func_process'
+DF cargado con exito
+load_df_server took 2.912372350692749s
+Traceback (most recent call last):
+  File "/data/compartida/etls/recaudos/etl_pagos_bigquery.py", line 32, in <module>
+    valores_unicos = tuple(map(int,df_pagos_bd[validator_column]))
+ValueError: invalid literal for int() with base 10: 'E34253'
+DF cargado con exito
+load_df_server took 2.098007917404175s
+Traceback (most recent call last):
+  File "/data/compartida/etls/recaudos/etl_pagos_bigquery.py", line 32, in <module>
+    valores_unicos = tuple(map(int,df_pagos_bd[validator_column]))
+ValueError: invalid literal for int() with base 10: 'E34253'
+DF cargado con exito
+load_df_server took 2.230686902999878s
+Error al leer la tabla: 404 Not found: Table ia-bigquery-397516:recaudos.pagos was not found in location us-east1
+
+Location: us-east1
+Job ID: 03f91045-463e-4d7f-a14f-38f4c8ff09e0
+
+Traceback (most recent call last):
+  File "/data/compartida/etls/recaudos/etl_pagos_bigquery.py", line 33, in <module>
+    df_pagos_not_duplicates = loadbq.rows_not_duplicates(df_pagos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+  File "/data/compartida/etls/tools/load_bigquery.py", line 37, in rows_not_duplicates
+    df_save = df_bd[~df_bd[column].isin(registros_duplicados[column].to_list())]
+TypeError: 'NoneType' object is not subscriptable
+DF cargado con exito
+load_df_server took 2.14265775680542s
+Se insertaron 10465 filas en ia-bigquery-397516.recaudos.pagos_partition.
+Save successfully
