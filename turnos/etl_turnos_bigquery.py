@@ -9,7 +9,7 @@ import func_process
 import load_bigquery as loadbq
 
 SQL_TURNOS_BD = """ SELECT *
-            FROM turnosView as t
+            FROM reportes.turnosAnioActual as t
             where date(t.fecha_turno) >= adddate(curdate(), interval -7 day)
             """
                
