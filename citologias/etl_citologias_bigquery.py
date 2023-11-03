@@ -9,7 +9,7 @@ import load_bigquery as loadbq
 
 SQL_CITOLOGIAS_BD = """ SELECT *
                 FROM reportes.citologias AS r
-                WHERE r.fecha_real = '2023-10-28'
+                WHERE r.fecha_real = CURDATE()
             """
                
 SQL_BIGQUERY = """

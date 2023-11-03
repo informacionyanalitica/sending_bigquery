@@ -1,3 +1,22 @@
 DF cargado con exito
 load_df_server took 0.18605780601501465s
 Dataframe sin datos
+DF cargado con exito
+load_df_server took 0.2501356601715088s
+Dataframe sin datos
+DF cargado con exito
+load_df_server took 0.3634476661682129s
+Se insertaron 160 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.22201251983642578s
+Se insertaron 116 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.22573184967041016s
+Se insertaron 35 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2955508232116699s
+Se insertaron 42 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
