@@ -20,3 +20,24 @@ DF cargado con exito
 load_df_server took 0.2955508232116699s
 Se insertaron 42 filas en ia-bigquery-397516.citologias.citologias.
 Save successfully
+DF cargado con exito
+load_df_server took 0.2711460590362549s
+Se insertaron 96 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.23554039001464844s
+Se insertaron 160 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2966911792755127s
+Error al leer la tabla: 400 Syntax error: Unexpected ")" at [4:42]
+
+Location: us-east1
+Job ID: 78c0d14c-deea-481b-8415-493c958cccbc
+
+Traceback (most recent call last):
+  File "/data/compartida/etls/citologias/etl_citologias_bigquery.py", line 42, in <module>
+    df_citologias_not_duplicates = loadbq.rows_not_duplicates(df_citologias,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+  File "/data/compartida/etls/tools/load_bigquery.py", line 37, in rows_not_duplicates
+    df_save = df_bd[~df_bd[column].isin(registros_duplicados[column].to_list())]
+TypeError: 'NoneType' object is not subscriptable

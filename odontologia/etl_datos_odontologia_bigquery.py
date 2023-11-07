@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np 
 import sys,os 
 
-path = os.path.abspath('../tools')
+path = os.path.abspath('/data/compartida/etls/tools')
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
 SQL_ODONTOLOGIA_DATOS_VIEW = """SELECT *
                     FROM reportes.datos_rips_odontologia_view AS r
-                    WHERE r.fecha_consulta >= adddate(curdate(), interval -7 day)
+                    WHERE r.fecha_consulta >= adddate(CURDATE(), INTERVAL -7 DAY)
                 """
 
 SQL_BIGQUERY = """
@@ -20,7 +20,7 @@ SQL_BIGQUERY = """
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id = 'odontologia'
-table_name = 'datos_rips_odontologia'
+table_name = 'datos_rips_odontologia_partition'
 validator_column = 'id_atencion'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id}.{table_name}'

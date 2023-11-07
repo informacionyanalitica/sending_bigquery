@@ -10,7 +10,7 @@ import load_bigquery as loadbq
 
 SQL_TURNOS_BD = """ SELECT *
             FROM reportes.turnosAnioActual as t
-            where date(t.fecha_turno) between '2023-10-29' and '2023-11-05'
+            where date(t.fecha_turno) >= adddate(curdate(), interval -7 day)
             """
                
 SQL_BIGQUERY = """

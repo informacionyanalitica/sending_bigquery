@@ -9,7 +9,7 @@ import load_bigquery as loadbq
 
 SQL_PAGOS_BD = """SELECT *
                 FROM reportes.pagosView AS t
-                WHERE date(t.fechaPago) between '2023-10-22' and '2023-10-29'
+                WHERE date(t.fechaPago) >= adddate(curdate(), interval -7 day)
                 """
                 
 SQL_BIGQUERY = """

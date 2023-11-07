@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import sys,os 
 
-path = os.path.abspath('../tools')
+path = os.path.abspath('/data/compartida/etls/tools')
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
