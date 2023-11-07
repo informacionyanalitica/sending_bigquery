@@ -3,14 +3,14 @@ import numpy as np
 import sys
 import os
 
-path = os.path.abspath('../tools')
+path = os.path.abspath('/data/compartida/etls/tools')
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
 SQL_TURNOS_BD = """ SELECT *
             FROM reportes.turnosAnioActual as t
-            where date(t.fecha_turno) >= adddate(curdate(), interval -7 day)
+            where date(t.fecha_turno) between '2023-10-29' and '2023-11-05'
             """
                
 SQL_BIGQUERY = """
