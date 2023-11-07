@@ -41,9 +41,9 @@ def convert_columns_number(df):
     df.atencion.fillna(0, inplace=True)
     df.t_taquilla.fillna(0, inplace=True)
 
-    df.edad  = df_turnos.edad.astype(int)
-    df.atencion = df_turnos.atencion.astype(int)
-    df.t_taquilla = df_turnos.t_taquilla.astype(int)
+    df.edad  = df.edad.astype(int)
+    df.atencion = df.atencion.astype(int)
+    df.t_taquilla = df.t_taquilla.astype(int)
     return df
 
 # Leer datos
