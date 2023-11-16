@@ -108,6 +108,31 @@ def reg_sede(palabra):
     patron = '(-[0-9]+)'
     sede = re.search(patron, palabra)
     return sede.group().replace('-','')
+def convert_columns_date(df):
+    df.fecha_nacimiento = pd.to_datetime(df.fecha_nacimiento, errors='coerce')
+    return df
+
+# Asignar 0 para valores NA
+def clean_values_na(df):
+    df.Poblacion_mayor_2_anos.fillna(0, inplace=True)
+    df.Poblacion_menor_igual_4_anos.fillna(0, inplace=True)
+    df.Poblacion_entre_5_19_anos.fillna(0, inplace=True)
+    df.Poblacion_entre_3_15_anos.fillna(0, inplace=True)
+    df.Poblacion_mayor_12_anos.fillna(0, inplace=True)
+    df.poblacion_total.fillna(0, inplace=True)
+    df.edad.fillna(0, inplace=True)
+    return df
+
+# Convertir numericos
+def convert_columns_number(df):
+    df.Poblacion_mayor_2_anos = df.Poblacion_mayor_2_anos.astype(int)
+    df.Poblacion_menor_igual_4_anos = df.Poblacion_menor_igual_4_anos.astype(int)
+    df.Poblacion_entre_5_19_anos = df.Poblacion_entre_5_19_anos.astype(int)
+    df.Poblacion_entre_3_15_anos = df.Poblacion_entre_3_15_anos.astype(int)
+    df.Poblacion_mayor_12_anos = df.Poblacion_mayor_12_anos.astype(int)
+    df.poblacion_total = df.poblacion_total.astype(int)
+    df.edad = df.edad.astype(int)
+    return df
 
 capita = (
     load_capita()
@@ -180,6 +205,12 @@ detalle_odontologia_horas_capita_poblaciones.rename({'nombre_sede_y':'nombre_sed
                                                     axis=1, 
                                                     inplace=True)
 detalle_odontologia_horas_capita_poblaciones_edad = detalle_odontologia_horas_capita_poblaciones.merge(capita_mes, on='identificacion_paciente', how='left')
+
+# Convertir columnas 
+detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_date(detalle_odontologia_horas_capita_poblaciones_edad)
+detalle_odontologia_horas_capita_poblaciones_edad = clean_values_na(detalle_odontologia_horas_capita_poblaciones_edad)
+detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_number(detalle_odontologia_horas_capita_poblaciones_edad)
+
 
 # Load data bigquery
 loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)

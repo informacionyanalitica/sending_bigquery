@@ -122,6 +122,5 @@ odontologia_controlado_med_f['fecha_consulta'] = odontologia_controlado_med_f['f
 # Cargar datos
 func_process.save_df_server(odontologia_controlado_med_f, 'odontologia_controlado_med', 'analitica')
 
-
 # Save bigquery 
 loadbq.load_data_bigquery(odontologia_controlado_med_f,TABLA_BIGQUERY)
