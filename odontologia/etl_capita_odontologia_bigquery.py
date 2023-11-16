@@ -53,7 +53,7 @@ sql_poblaciones_odontologia = f"""
                                     Poblacion_entre_5_19_anos,
                                     Poblacion_entre_3_15_anos,
                                     Poblacion_mayor_12_anos
-                                FROM poblaciones_odontologia
+                                FROM analitica.poblaciones_odontologia
                                 WHERE `FECHA CAPITA` = '{fecha_capita.strftime('%Y-%m-%d')}' 
                                 """
 codigo_sedes = {
@@ -153,7 +153,7 @@ capita_mes = func_process.load_df_server(sql_capita_mes, 'reportes')
 capita_mes['identificacion_paciente'] = capita_mes['identificacion_paciente'].astype('str')
 detalle_odontologia['fecha_capita'] = detalle_odontologia['fecha_consulta'].apply(lambda x: func_process.pd.to_datetime(x.strftime('%Y-%m-15')))
 
-poblaciones_odontologia = func_process.load_df_server(sql_poblaciones_odontologia, 'analitica')
+poblaciones_odontologia = func_process.load_df_server(sql_poblaciones_odontologia, 'reportes')
 poblaciones_odontologia['fecha_capita'] = func_process.pd.to_datetime(poblaciones_odontologia['fecha_capita'])
 poblacion_capita['fecha_capita'] = func_process.pd.to_datetime(poblacion_capita['fecha_capita'])
 poblaciones_odontologia = poblaciones_odontologia.merge(poblacion_capita[['fecha_capita','nombre_sede','poblacion_total']],
@@ -212,10 +212,11 @@ detalle_odontologia_horas_capita_poblaciones_edad = clean_values_na(detalle_odon
 detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_number(detalle_odontologia_horas_capita_poblaciones_edad)
 
 
+
+print(detalle_odontologia_horas_capita_poblaciones_edad.info())
 # Load data bigquery
 loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
 
 
-func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad, 
-                            'detalle_odontologia_capita', 
-                            'analitica')
+# Load data Mariadb
+func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')
