@@ -66,11 +66,23 @@ def hora(h):
     h = str(h).split(' ')[-1:][0]
     return h
 
+def convert_columns_date(df):
+    df.fecha_consulta = pd.to_datetime(df.fecha_consulta, errors='coerce')
+    return df
+
+def convert_columns_str(df):
+    df.hora_cita = df.hora_cita.astype(str)
+    df.hora_finaliza_cita = df.hora_finaliza_cita.astype(str)
+    #Replace str
+    df.hora_cita = [row.replace('0 days ','') for row in df.hora_cita]
+    df.hora_finaliza_cita = [row.replace('0 days ','') for row in df.hora_finaliza_cita]
+    return df
 
 df_datos_rips_odontologia = func_process.load_df_server(sql_datos_rips_odontologia, 'reportes')
 df_datos_rips_odontologia['hora_cita'] = df_datos_rips_odontologia['hora_cita'].astype('str')
 df_datos_rips_odontologia['fecha_consulta'] = func_process.pd.to_datetime(df_datos_rips_odontologia['fecha_consulta'])
 df_detalle_rips_odontologia = func_process.load_df_server(sql_detalle_rips_odontologia, 'reportes')
+df_detalle_rips_odontologia.drop('id_detalle',inplace=True, axis=1)
 df_empleados_activos = func_process.load_df_server(sql_empleados_activos, 'reportes')
 odontologia_controlado = df_datos_rips_odontologia[(df_datos_rips_odontologia['fecha_consulta']>= fecha_first_day) &
                                                    (df_datos_rips_odontologia['fecha_consulta']<= fecha_last_day) &
@@ -83,7 +95,7 @@ odontologia_controlado.drop(odontologia_controlado[(odontologia_controlado['iden
                             )
 df_detalle_rips_odontologia.drop(df_detalle_rips_odontologia[(df_detalle_rips_odontologia.id_atencion == '')|
                                                              (df_detalle_rips_odontologia.id_atencion.isnull())].index, axis= 0, inplace=True)
-detalle_odontologia = df_detalle_rips_odontologia['id_atencion'].str.split('-', 6, expand=True)[[2,0,3,4,5,6]].rename(columns={0:'identificacion_profesional', 2:'identificacion_paciente'})
+detalle_odontologia = df_detalle_rips_odontologia['id_atencion'].str.split('-',expand=True)[[2,0,3,4,5,6]].rename(columns={0:'identificacion_profesional', 2:'identificacion_paciente'})
 detalle_odontologia['fecha_cita'] = detalle_odontologia[3]+'-'+detalle_odontologia[4]+'-'+detalle_odontologia[5]
 detalle_odontologia.drop(columns=[3,4,5,6], inplace = True)
 df_detalle_rips_odontologia.drop(['identificacion_paciente', 'identificacion_profesional'], axis=1, inplace=True)
@@ -119,9 +131,15 @@ odontologia_controlado_med_f = odontologia_controlado_med.loc[:, ['id_atencion',
 odontologia_controlado_med_f.rename(columns={'hora_cita_2':'hora_cita', 'hora_finaliza_cita_2':'hora_finaliza_cita'}, inplace= True)
 odontologia_controlado_med_f['fecha_consulta'] = odontologia_controlado_med_f['fecha_consulta'].astype('str')
 
+# Convertir columnas fechas
+odontologia_controlado_med_f = convert_columns_date(odontologia_controlado_med_f)
+
+# Convert columnas string
+odontologia_controlado_med_f = convert_columns_str(odontologia_controlado_med_f)
+
+
 # Cargar datos
 func_process.save_df_server(odontologia_controlado_med_f, 'odontologia_controlado_med', 'analitica')
-
 
 # Save bigquery 
 loadbq.load_data_bigquery(odontologia_controlado_med_f,TABLA_BIGQUERY)
