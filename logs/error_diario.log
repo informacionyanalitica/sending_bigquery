@@ -41,3 +41,48 @@ Traceback (most recent call last):
   File "/data/compartida/etls/tools/load_bigquery.py", line 37, in rows_not_duplicates
     df_save = df_bd[~df_bd[column].isin(registros_duplicados[column].to_list())]
 TypeError: 'NoneType' object is not subscriptable
+DF cargado con exito
+load_df_server took 0.18715739250183105s
+Se insertaron 57 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2961435317993164s
+Se insertaron 71 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.31727170944213867s
+Se insertaron 83 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2886383533477783s
+Se insertaron 85 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2878570556640625s
+Se insertaron 89 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.30118727684020996s
+Error al leer la tabla: 400 Syntax error: Unexpected ")" at [4:42]
+
+Location: us-east1
+Job ID: 067eed26-a5e9-49aa-ad6a-a7ab423b7b6f
+
+Traceback (most recent call last):
+  File "/data/compartida/etls/citologias/etl_citologias_bigquery.py", line 42, in <module>
+    df_citologias_not_duplicates = loadbq.rows_not_duplicates(df_citologias,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+  File "/data/compartida/etls/tools/load_bigquery.py", line 37, in rows_not_duplicates
+    df_save = df_bd[~df_bd[column].isin(registros_duplicados[column].to_list())]
+TypeError: 'NoneType' object is not subscriptable
+DF cargado con exito
+load_df_server took 0.2837231159210205s
+Se insertaron 55 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.41626524925231934s
+Se insertaron 249 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
+DF cargado con exito
+load_df_server took 0.2669217586517334s
+Se insertaron 73 filas en ia-bigquery-397516.citologias.citologias.
+Save successfully
