@@ -215,8 +215,8 @@ detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_number(detal
 
 print(detalle_odontologia_horas_capita_poblaciones_edad.info())
 # Load data bigquery
-loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
+#loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
 
 
 # Load data Mariadb
-func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')
+#func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')
