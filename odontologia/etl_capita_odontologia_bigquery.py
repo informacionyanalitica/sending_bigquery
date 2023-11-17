@@ -4,7 +4,8 @@ import sys,os
 from datetime import datetime,timedelta
 import re
 
-path = os.path.abspath('/data/compartida/etls/tools')
+PATH_TOOLS = os.environ.get("PATH_TOOLS")
+path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
