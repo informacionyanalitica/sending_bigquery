@@ -4,8 +4,8 @@ import numpy as np
 import sys,os 
 import func_process
 
-
-path = os.path.abspath('/data/compartida/etls/bigquery')
+PATH_BIGQUERY = os.environ.get("PATH_BIGQUERY")
+path = os.path.abspath(PATH_BIGQUERY)
 sys.path.insert(1,path)
 from cloud_bigquery import CloudBigQuery
 

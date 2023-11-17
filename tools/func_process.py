@@ -50,6 +50,7 @@ PASSWORD = os.environ.get("DB_PASSWORD")
 DB_ANALITICA = 'analitica'
 DB_REPORTES = 'reportes'
 
+
 CONFIG_MARIADB = {'user':DB_USER, 'password':PASSWORD, 'host':HOST,'port':PORT}
 # Funcion que consulta en la base de datos indicada la consulta relacionada
 @timer
