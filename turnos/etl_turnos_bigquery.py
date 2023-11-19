@@ -58,6 +58,5 @@ df_turnos_bd = convert_columns_number(df_turnos_bd)
 # Obtener datos no duplicados
 valores_unicos = tuple(map(int,df_turnos_bd[validator_column]))
 df_turnos_not_duplicates = loadbq.rows_not_duplicates(df_turnos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
-print(df_turnos_not_duplicates.shape)
 # Cargar a bigquery
-#loadbq.load_data_bigquery(df_turnos_not_duplicates,TABLA_BIGQUERY)
+loadbq.load_data_bigquery(df_turnos_not_duplicates,TABLA_BIGQUERY)
