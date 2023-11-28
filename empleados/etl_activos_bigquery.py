@@ -8,6 +8,7 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
+
 SQL_EMPLEADOS_BD = """SELECT *
             FROM reportes.empleados_activos
             """
@@ -35,6 +36,13 @@ def convert_date_columns(df):
     df.finalizacion_contrato = pd.to_datetime(df.finalizacion_contrato, errors='coerce')
     return df
 
+def validate_load(df_load,df_activos_not_duplicates):
+    try:
+        total_cargues = df_load.totalCargues[0]
+        if total_cargues==0:
+            loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY)
+    except ValueError as err:
+        print(err)
 
 # Leer datos
 df_activos_bd = func_process.load_df_server(SQL_EMPLEADOS_BD, 'reportes')              
@@ -48,4 +56,6 @@ valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
 df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
 
 # Cargar a bigquery
-loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY)
+validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
+validate_load(validate_loads_logs,df_activos_not_duplicates)
+

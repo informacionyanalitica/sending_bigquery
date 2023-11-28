@@ -3,11 +3,22 @@ import pandas as pd
 import numpy as np 
 import sys,os 
 import func_process
+from datetime import datetime
 
 PATH_BIGQUERY = os.environ.get("PATH_BIGQUERY")
 path = os.path.abspath(PATH_BIGQUERY)
 sys.path.insert(1,path)
 from cloud_bigquery import CloudBigQuery
+
+FECHA_CARGUE = datetime.now()
+YEAR = FECHA_CARGUE.year
+MONTH = FECHA_CARGUE.month
+
+SQL_VALIDATE_LOADS = """ SELECT COUNT(*) AS totalCargues
+                        FROM reportes.logsCarguesBigquery AS lg
+                        WHERE lg.idBigquery = '{idBigquery}'
+                        AND year(lg.fechaCargue) = '{year}' AND MONTH(lg.fechaCargue)='{mes}'
+                        """
 
 def instanciar_cloud_bigquery(tabla_bigquery):
     project_id_product, dataset_id, table_name = tabla_bigquery.split('.')
@@ -49,4 +60,11 @@ def load_data_bigquery(df_save,tabla_bigquery):
         else:    
             print('Dataframe sin datos')
     except Exception as err:
+        print(err)
+
+def validate_loads_monthly(tabla_bigquery):
+    try:
+        df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS.format(idBigquery=tabla_bigquery,year=YEAR,mes=MONTH),'reportes')
+        return df_validate_loads
+    except ValueError as err:
         print(err)

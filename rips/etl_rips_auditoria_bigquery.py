@@ -124,13 +124,6 @@ SQL_VALIDATE_ROWS = """ SELECT COUNT(*) AS totalRows
                         WHERE date(q.hora_fecha) BETWEEN adddate(LAST_DAY(adddate(CURDATE(), INTERVAL -1 MONTH)), INTERVAL -2 day)
                         AND LAST_DAY(adddate(CURDATE(), INTERVAL -1 month))"""
 
-SQL_VALIDATE_LOADS = """ SELECT COUNT(*) AS totalCargues
-                        FROM reportes.logsCarguesBigquery AS lg
-                        WHERE lg.idBigquery = '{idBigquery}'
-                        AND year(lg.fechaCargue) = '{year}' AND MONTH(lg.fechaCargue)='{mes}'
-                        """
-
-
 # Parametros bigquery
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
@@ -167,6 +160,18 @@ def n_prestacion(codigo_prestacion):
         return 'Consulta Prioritaria'
     elif codigo_prestacion == '50120' or codigo_prestacion == '50130' or codigo_prestacion == '50140' or codigo_prestacion == '50380' or codigo_prestacion == '50150' or codigo_prestacion == '50190':
         return 'Consulta Especialidades Basicas'
+    
+def validate_load(df_rows,df_load):
+    try:
+        total_cargue = df_load.totalCargues[0]
+        total_rows = df_rows.totalRows[0]
+        if total_rows > 0 and total_cargue == 0:
+            # Cargar mariadb
+            func_process.save_df_server(df_rips_auditoria_mes_p_sede_gestal,'rips_auditoria_poblacion_2','analitica')
+            # Cargar bigquery
+            loadbq.load_data_bigquery(df_rips_auditoria_mes_p_sede_gestal,TABLA_BIGQUERY)
+    except ValueError as err:
+        print(err)
 
 list_poblacion_argentina = add_poblacion_mes(list_poblacion_argentina, 'ARGENTINA')
 list_poblacion_especialistas = add_poblacion_mes(list_poblacion_especialistas, 'ESPECIALISTAS')
@@ -270,10 +275,8 @@ df_rips_auditoria_mes_p_sede_gestal = convert_numbers(df_rips_auditoria_mes_p_se
 
 # VALIDATE LOAD
 validate_rows = func_process.load_df_server(SQL_VALIDATE_ROWS,'reportes')
-validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS.format(idBigquery=TABLA_BIGQUERY,year=year,mes=mes_numero),'reportes')
+validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
 
 # Load data to server
-if validate_rows.shape[0] > 0 and validate_loads.shape[0] > 0:
-    func_process.save_df_server(df_rips_auditoria_mes_p_sede_gestal,'rips_auditoria_poblacion_2','analitica')
-    # Cargar bigquery
-    loadbq.load_data_bigquery(df_rips_auditoria_mes_p_sede_gestal,TABLA_BIGQUERY)
+validate_load(validate_rows,validate_loads_logs)
+
