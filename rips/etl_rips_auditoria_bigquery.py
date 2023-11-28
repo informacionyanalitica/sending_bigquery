@@ -119,6 +119,18 @@ sql_gestal = """
                 FROM empleados_2019
             """
 
+SQL_VALIDATE_ROWS = """ SELECT COUNT(*) AS totalRows
+                        FROM reportes.rips AS q
+                        WHERE date(q.hora_fecha) BETWEEN adddate(LAST_DAY(adddate(CURDATE(), INTERVAL -1 MONTH)), INTERVAL -2 day)
+                        AND LAST_DAY(adddate(CURDATE(), INTERVAL -1 month))"""
+
+SQL_VALIDATE_LOADS = """ SELECT COUNT(*) AS totalCargues
+                        FROM reportes.logsCarguesBigquery AS lg
+                        WHERE lg.idBigquery = '{idBigquery}'
+                        AND year(lg.fechaCargue) = '{year}' AND MONTH(lg.fechaCargue)='{mes}'
+                        """
+
+
 # Parametros bigquery
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
@@ -256,10 +268,12 @@ df_rips_auditoria_mes_p_sede_gestal = df_rips_auditoria_mes_p_sede_gestal[
 df_rips_auditoria_mes_p_sede_gestal = convert_dates(df_rips_auditoria_mes_p_sede_gestal)
 df_rips_auditoria_mes_p_sede_gestal = convert_numbers(df_rips_auditoria_mes_p_sede_gestal)
 
-# Load data to server
-func_process.save_df_server(df_rips_auditoria_mes_p_sede_gestal, 
-                            'rips_auditoria_poblacion_2', 
-                            'analitica')
+# VALIDATE LOAD
+validate_rows = func_process.load_df_server(SQL_VALIDATE_ROWS,'reportes')
+validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS.format(idBigquery=TABLA_BIGQUERY,year=year,mes=mes_numero),'reportes')
 
-# Cargar bigquery
-loadbq.load_data_bigquery(df_rips_auditoria_mes_p_sede_gestal,TABLA_BIGQUERY)
+# Load data to server
+if validate_rows.shape[0] > 0 and validate_loads.shape[0] > 0:
+    func_process.save_df_server(df_rips_auditoria_mes_p_sede_gestal,'rips_auditoria_poblacion_2','analitica')
+    # Cargar bigquery
+    loadbq.load_data_bigquery(df_rips_auditoria_mes_p_sede_gestal,TABLA_BIGQUERY)
