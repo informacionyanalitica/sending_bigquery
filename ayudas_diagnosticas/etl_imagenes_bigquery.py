@@ -11,7 +11,7 @@ import func_process
 import load_bigquery as loadbq
 
 #fecha_cargue = datetime.now()
-fecha_cargue = '2023-11-26'
+fecha_cargue = '2023-11-28'
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
