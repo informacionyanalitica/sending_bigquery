@@ -11,7 +11,7 @@ import func_process
 import load_bigquery as loadbq
 
 #fecha_cargue = datetime.now()
-fecha_cargue = '2023-11-24'
+fecha_cargue = '2023-11-26'
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
@@ -92,8 +92,10 @@ def convert_date_factura(df):
 # Obtener datos no duplicados
 def get_data_no_duplicate(df,validator_column,sql_bigquery,tabla_bigquery):
     try:
-        valores_unicos = tuple(map(int, df[validator_column]))
-        df_not_duplicates = loadbq.rows_not_duplicates(df,validator_column,sql_bigquery,tabla_bigquery,valores_unicos) 
+        df_not_duplicates = pd.DataFrame()
+        if df.shape[0] >0:
+            valores_unicos = tuple(map(int, df[validator_column]))
+            df_not_duplicates = loadbq.rows_not_duplicates(df,validator_column,sql_bigquery,tabla_bigquery,valores_unicos) 
         return df_not_duplicates
     except ValueError as err:
         print(err)
