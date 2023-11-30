@@ -36,26 +36,25 @@ def convert_date_columns(df):
     df.finalizacion_contrato = pd.to_datetime(df.finalizacion_contrato, errors='coerce')
     return df
 
-def validate_load(df_load,df_activos_not_duplicates):
+def validate_load(df_load):
     try:
         total_cargues = df_load.totalCargues[0]
         if total_cargues==0:
+            # Leer datos
+            df_activos_bd = func_process.load_df_server(SQL_EMPLEADOS_BD, 'reportes')   
+            df_activos_bd = convert_number_columns(df_activos_bd)
+            df_activos_bd = convert_date_columns(df_activos_bd)    
+            
+            # Obtener datos no duplicados
+            valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
+            df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+            # Load bigquery
             loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY)
     except ValueError as err:
         print(err)
 
-# Leer datos
-df_activos_bd = func_process.load_df_server(SQL_EMPLEADOS_BD, 'reportes')              
-
-# Convert columns
-df_activos_bd = convert_number_columns(df_activos_bd)
-df_activos_bd = convert_date_columns(df_activos_bd)
-
-# Obtener datos no duplicados
-valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
-df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
 
 # Cargar a bigquery
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
-validate_load(validate_loads_logs,df_activos_not_duplicates)
+validate_load(validate_loads_logs)
 
