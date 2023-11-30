@@ -42,11 +42,11 @@ def insert_log_cargues_bigquery(total_registros:int,table_bigquery:str):
 def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     try:
-        if len(valores_unicos)>1:
-            sql_read = sql_biquery.format(tabla_bigquery,valores_unicos)
-        else:
+        if len(valores_unicos)==1:
             valor_unico = '('+str(valores_unicos[0])+')'
             sql_read = sql_biquery.format(tabla_bigquery,valor_unico)
+        elif len(valores_unicos)>1:
+             sql_read = sql_biquery.format(tabla_bigquery,valores_unicos) 
         registros_duplicados = bq_cloud.read_table(sql_read)
         # Obtener valores no duplicados
         df_save = df_bd[~df_bd[column].isin(registros_duplicados[column].to_list())]

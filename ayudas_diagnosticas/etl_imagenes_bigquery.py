@@ -10,8 +10,7 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-#fecha_cargue = datetime.now()
-fecha_cargue = '2023-11-28'
+fecha_cargue = datetime.now().date()
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
@@ -99,6 +98,7 @@ def get_data_no_duplicate(df,validator_column,sql_bigquery,tabla_bigquery):
         return df_not_duplicates
     except ValueError as err:
         print(err)
+
 
 # Read data
 df_examenes = func_process.load_df_server(SQL_DIM_EXAMENES.format(fecha_cargue=fecha_cargue), 'reportes')    
