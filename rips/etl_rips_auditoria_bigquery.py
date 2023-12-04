@@ -269,14 +269,14 @@ df_rips_auditoria_mes_p_sede_gestal = df_rips_auditoria_mes_p_sede_gestal[
 ]
 
 
-
 df_rips_auditoria_mes_p_sede_gestal = convert_dates(df_rips_auditoria_mes_p_sede_gestal)
 df_rips_auditoria_mes_p_sede_gestal = convert_numbers(df_rips_auditoria_mes_p_sede_gestal)
+df_rips_auditoria_mes_p_sede_gestal.columns = df_rips_auditoria_mes_p_sede_gestal.columns.str.lower()
 
 # VALIDATE LOAD
 validate_rows = func_process.load_df_server(SQL_VALIDATE_ROWS,'reportes')
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
 
-# Load data to server
+# # Load data to server
 validate_load(validate_rows,validate_loads_logs)
 
