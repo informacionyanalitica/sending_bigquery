@@ -66,6 +66,15 @@ def load_data_bigquery(df_save,tabla_bigquery):
     except Exception as err:
         print(err)
 
+def read_data_bigquery(sql_bigquery,tabla_bigquery):
+    bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
+    df_read = pd.DataFrame()
+    try:
+        df_read = bq_cloud.read_table(sql_bigquery)
+        return df_read
+    except Exception as err:
+        print(err)
+
 def validate_loads_monthly(tabla_bigquery):
     try:
         df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS.format(idBigquery=tabla_bigquery,year=YEAR,mes=MONTH),'reportes')
