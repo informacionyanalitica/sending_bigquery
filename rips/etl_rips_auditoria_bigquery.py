@@ -161,15 +161,15 @@ def n_prestacion(codigo_prestacion):
     elif codigo_prestacion == '50120' or codigo_prestacion == '50130' or codigo_prestacion == '50140' or codigo_prestacion == '50380' or codigo_prestacion == '50150' or codigo_prestacion == '50190':
         return 'Consulta Especialidades Basicas'
     
-def validate_load(df_rows,df_load):
+def validate_load(df_validate_rows,df_validate_load,df_load):
     try:
-        total_cargue = df_load.totalCargues[0]
-        total_rows = df_rows.totalRows[0]
+        total_cargue = df_validate_load.totalCargues[0]
+        total_rows = df_validate_rows.totalRows[0]
         if total_rows > 0 and total_cargue == 0:
             # Cargar mariadb
-            func_process.save_df_server(df_rips_auditoria_mes_p_sede_gestal,'rips_auditoria_poblacion_2','analitica')
+            func_process.save_df_server(df_load,'rips_auditoria_poblacion_2','analitica')
             # Cargar bigquery
-            loadbq.load_data_bigquery(df_rips_auditoria_mes_p_sede_gestal,TABLA_BIGQUERY)
+            loadbq.load_data_bigquery(df_load,TABLA_BIGQUERY)
     except ValueError as err:
         print(err)
 
@@ -278,5 +278,5 @@ validate_rows = func_process.load_df_server(SQL_VALIDATE_ROWS,'reportes')
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
 
 # # Load data to server
-validate_load(validate_rows,validate_loads_logs)
+validate_load(validate_rows,validate_loads_logs,df_rips_auditoria_mes_p_sede_gestal)
 
