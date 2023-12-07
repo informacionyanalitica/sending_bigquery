@@ -10,11 +10,12 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-fecha = func_process.pd.to_datetime(datetime.now() - timedelta(days=30)).strftime('%Y-%m')
+fecha = func_process.pd.to_datetime(datetime.now() - timedelta(days=15)).strftime('%Y-%m')
 fecha_i = func_process.pd.to_datetime(fecha+'-01')
 fecha_capita = func_process.pd.to_datetime(fecha+'-15')
 dias_del_mes = str(fecha_i.days_in_month)
 fecha_f = func_process.pd.to_datetime(fecha+'-'+dias_del_mes)
+
 
 mes_letra = fecha_capita.strftime('%B').capitalize()
 mes_numero = str(fecha_capita.month)
@@ -213,11 +214,8 @@ detalle_odontologia_horas_capita_poblaciones_edad = clean_values_na(detalle_odon
 detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_number(detalle_odontologia_horas_capita_poblaciones_edad)
 
 
-
-print(detalle_odontologia_horas_capita_poblaciones_edad.info())
 # Load data bigquery
-#loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
-
+loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
 
 # Load data Mariadb
-#func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')
+func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')

@@ -13,21 +13,21 @@ from datetime import datetime, timedelta
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id = 'odontologia'
-table_name = 'datos_rips_odontologia_partition'
+table_name = 'odontologia_controlado_med'
 validator_column = 'id_atencion'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id}.{table_name}'
 
 
 # CREAR FECHAS
-today = datetime.now() - timedelta(days=20)
+today = datetime.now() - timedelta(days=15)
 fecha_cargue = today.strftime('%Y-%m') 
 
 fecha = func_process.pd.to_datetime(fecha_cargue+'-01')
 fecha_first_day = fecha.strftime('%Y-%m-01')
 fecha_last_day = f"{fecha.strftime('%Y')}-{fecha.strftime('%m')}-{fecha.days_in_month}"
 str(fecha.year)+'-'+'{:02d}'.format(fecha.month)+'-'+str(fecha.days_in_month)
-fecha_tres_meses = (fecha - func_process.np.timedelta64(2,'M'))
+fecha_tres_meses = (fecha - func_process.np.timedelta64(60,'D'))
 fecha_tres_meses = fecha_tres_meses.strftime('%Y-%m-01')
 
 #CARGAMOS LA TABLAS TABLAS QUE VAMOS A ORGANIZAR
@@ -137,7 +137,6 @@ odontologia_controlado_med_f = convert_columns_date(odontologia_controlado_med_f
 
 # Convert columnas string
 odontologia_controlado_med_f = convert_columns_str(odontologia_controlado_med_f)
-
 
 # Cargar datos
 func_process.save_df_server(odontologia_controlado_med_f, 'odontologia_controlado_med', 'analitica')
