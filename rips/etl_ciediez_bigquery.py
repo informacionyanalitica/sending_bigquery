@@ -47,6 +47,16 @@ def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
     except ValueError as err:
         print(err)
 
+def convert_columns_number(df):
+    df.replace('nul','0',inplace=True)
+    df.edad_anos.fillna(0, inplace=True)
+    df.edad_anos = df.edad_anos.astype(int)
+    return df
+
+def convert_columns_date(df):
+    df.fecha_capita = pd.to_datetime(df.fecha_capita, errors='coerce')
+    return df
+
 # Read data
 rips = func_process.load_df_server(SQL_RIPS, 'analitica')
 df_cie10 = func_process.load_df_server(SQL_CIEDIEZ, 'analitica')
@@ -60,8 +70,9 @@ rips_cie10 = rips.merge(df_empleados,
                                           left_on='dx_principal', 
                                           right_on='cod_4', 
                                           how='left')
-
 rips_cie10 = rips_cie10[rips_cie10.fecha_capita==fecha_capita]
+rips_cie10 = convert_columns_date(rips_cie10)
+rips_cie10 = convert_columns_number(rips_cie10)
 
 # VALIDATE LOAD
 validate_loads_logs_ciediez =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CIEDIEZ)
