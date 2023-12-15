@@ -21,8 +21,8 @@ table_name_medicos = 'dim_medicos_imagenes'
 table_name_facturas = 'facts_facturas_imagenes'  
 
 validator_column_examenes = 'idExamenImagen'
-validator_column_pacientes = 'idPacienteImagen'
-validator_column_medicos = 'idMedicoImagen'
+validator_column_pacientes = 'documentoPaciente'
+validator_column_medicos = 'documentoMedico'
 validator_column_facturas = 'idfacturaImagen'
 
 tabla_bigquery_examenes = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_examenes}'
