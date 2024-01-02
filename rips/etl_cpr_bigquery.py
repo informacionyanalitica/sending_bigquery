@@ -13,9 +13,11 @@ project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
 table_name_resumen_cpr = 'resumen_cpr'
 table_name_indicador_cpr = 'rips_cpr_indicador'
+table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
 
 TABLA_BIGQUERY_RESUMEN = f'{project_id_product}.{dataset_id_rips}.{table_name_resumen_cpr}'
 TABLA_BIGQUERY_INDICADOR = f'{project_id_product}.{dataset_id_rips}.{table_name_indicador_cpr}'
+TABLA_BIGQUERY_RIPS =  f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
 
 today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
 fecha = f"{today.year}-{today.month}-01"
@@ -66,10 +68,11 @@ def n_programa(codigo_sura):
     elif codigo_sura == '7000076':
         return 'ControlCPR Telemedicina'
     
-def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        if  total_cargue == 0:
+        total_rips = df_validate_rips.totalCargues[0]
+        if  total_cargue == 0 and total_rips >0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
@@ -129,11 +132,11 @@ rips_cpr_nine_indicador = convert_columns_numeric(rips_cpr_nine_indicador)
 # VALIDATE LOAD
 validate_loads_logs_resumen_cpr =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RESUMEN)
 validate_loads_logs_indicador_cpr =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_INDICADOR)
-
+validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
 # Load data to server
 #-- Resumen
-validate_load(validate_loads_logs_resumen_cpr,resumen_cpr,TABLA_BIGQUERY_RESUMEN,table_name_resumen_cpr)
+validate_load(validate_loads_logs_resumen_cpr,validate_loads_logs_rips,resumen_cpr,TABLA_BIGQUERY_RESUMEN,table_name_resumen_cpr)
 #-- Indicador
-validate_load(validate_loads_logs_indicador_cpr,rips_cpr_nine_indicador,TABLA_BIGQUERY_INDICADOR,table_name_indicador_cpr)
+validate_load(validate_loads_logs_indicador_cpr,validate_loads_logs_rips,rips_cpr_nine_indicador,TABLA_BIGQUERY_INDICADOR,table_name_indicador_cpr)
 

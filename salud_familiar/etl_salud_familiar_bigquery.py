@@ -14,7 +14,7 @@ fecha_capita = func_process.pd.to_datetime(fecha_mes).strftime('%Y-%m-15')
 fecha_i = func_process.pd.to_datetime(fecha_mes).strftime('%Y-%m-01 00:00:00')
 fecha_f = f"{fecha_mes.strftime('%Y-%m')}-{fecha_mes.days_in_month} 23:59:59"
 
-print(fecha_capita)
+
 #CARGAMOS LA TABLAS TABLAS QUE VAMOS A ORGANIZAR
 sql_capita_poblaciones = f"""
                             SELECT 
@@ -201,7 +201,6 @@ def validate_read(df_validate_rips):
 # VALIDATE LOAD
 validate_loads_logs_salud_familiar =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_SALUD_FAMILIAR)
 validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
-print(validate_loads_logs_rips)
 
 # Read Data
 df_salud_familiar_poblacion_gestal = validate_read(validate_loads_logs_rips)
