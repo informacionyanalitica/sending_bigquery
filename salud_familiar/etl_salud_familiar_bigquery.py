@@ -95,13 +95,13 @@ def n_prestacion(codigo_prestacion):
     elif codigo_prestacion == '37702':
         return 'Consultas Psicologia'
     
-def p_total(f_capita, n_ips='COOPSANA IPS'):
+def p_total(df_capita_poblaciones_m,f_capita, n_ips='COOPSANA IPS'):
     poblacion_total = df_capita_poblaciones_m[(df_capita_poblaciones_m['FECHA_CAPITA'] == f_capita) & (df_capita_poblaciones_m['NOMBRE_IPS'] == n_ips)].POBLACION_TOTAL.iloc[0]
     return poblacion_total
 
 
 # Definir estado de profesional
-def state_emp(id):
+def state_emp(id,df_empleados):
     if ((id == df_empleados[df_empleados['estado_activo'] == '1'].identificacion_profesional_remite).sum()) > 0:
         return 'ACTIVO'
     elif ((id == df_empleados[df_empleados['estado_activo'] == '2'].identificacion_profesional_remite).sum()) > 0:
@@ -119,8 +119,9 @@ def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table
         total_cargue_rips = df_validate_rips.totalCargues[0]
         if  total_cargue == 0 and total_cargue_rips>0:
             # Cargar mariadb
-            func_process.save_df_server(df_load, table_mariadb, 'analitica')
+            #func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
+            print(df_load.info())
             loadbq.load_data_bigquery(df_load,tabla_bigquery)
     except ValueError as err:
         print(err)
@@ -142,7 +143,6 @@ def transform_salud_familiar(df_salud_familiar):
 
 def trasnform_rips_auditoria(df_rips_auditoria_obstetricia_2):
     try:
-        df_capita_poblaciones['FECHA_CAPITA'] = func_process.pd.to_datetime(df_capita_poblaciones['FECHA_CAPITA'],errors='coerce').dt.tz_convert(None)
         df_rips_auditoria_obstetricia_2_unicos = df_rips_auditoria_obstetricia_2.drop_duplicates(subset = ['identificacion_pac', 'fecha_capita'])
         df_total_maternas = df_rips_auditoria_obstetricia_2_unicos.groupby(['fecha_capita', 'nombre_ips']).agg({'identificacion_pac':'count'}).reset_index().rename(columns={'fecha_capita':'FECHA_CAPITA', 'nombre_ips':'NOMBRE_IPS', 'identificacion_pac':'poblacion_maternas'})
         df_total_maternas['FECHA_CAPITA'] = func_process.pd.to_datetime(df_total_maternas['FECHA_CAPITA'],errors='coerce').dt.tz_convert(None)
@@ -154,17 +154,29 @@ def trasnform_rips_auditoria(df_rips_auditoria_obstetricia_2):
     except ValueError as err:
         print(err)
 
-def merge_poblaciones_salud_familiar(df_capita_poblaciones,df_total_maternas,df_salud_familiar):
+def convert_columns_date(df):
+    # Convertir fechas
+    df.FECHA_CAPITA = pd.to_datetime(df.FECHA_CAPITA, errors='coerce')
+    df.fecha_emision_orden = pd.to_datetime(df.fecha_emision_orden, errors='coerce')
+    return df
+
+def convert_columns_number(df):
+    # Convertir numeros
+    df.edad = df.edad.astype(int)
+    return df
+
+def merge_poblaciones_salud_familiar(df_capita_poblaciones,df_total_maternas,df_salud_familiar,df_empleados):
     try:
+        df_capita_poblaciones['FECHA_CAPITA'] = func_process.pd.to_datetime(df_capita_poblaciones['FECHA_CAPITA'],errors='coerce').dt.tz_convert(None)
         df_capita_poblaciones_m = df_capita_poblaciones.merge(df_total_maternas, on= ['FECHA_CAPITA', 'NOMBRE_IPS'], how= 'left')
         df_salud_familiar_poblacion = df_salud_familiar.merge(df_capita_poblaciones_m, how='left', on=['FECHA_CAPITA','NOMBRE_IPS'])
         df_salud_familiar_poblacion.fillna(' ', inplace= True) 
-        df_salud_familiar_poblacion['POBLACION_TOTAL_COOPSANA'] = df_salud_familiar_poblacion.apply(lambda x: p_total(x['FECHA_CAPITA']), axis=1)
+        df_salud_familiar_poblacion['POBLACION_TOTAL_COOPSANA'] = df_salud_familiar_poblacion.apply(lambda x: p_total(df_capita_poblaciones_m,x['FECHA_CAPITA']), axis=1)
         df_salud_familiar_poblacion = df_salud_familiar_poblacion.loc[:, ['FECHA_CAPITA', 'NOMBRE_IPS', 'fecha_emision_orden', 'codigo_prestacion', 'NOMBRE_PRESTACION', 'ips_atiende', 'identificacion_profesional_remite', 'nombre_medico_remite', 'identificacion_paciente', 'nombre_paciente', 'edad', 'sexo', 'telefono', 'codigo_dx', 'descripcion_dx', 'identificacion_medico_familia', 'nombre_medico_familia', 'numero_orden', 'POBLACION_TOTAL', 'MENORES_A_18_ANOS', 'MAYORES_DE_18_ANOS', 'MUJERES_MAYORES_IGUAL_18_ANOS', 'poblacion_maternas', 'POBLACION_TOTAL_COOPSANA']]
         df_salud_familiar_poblacion.poblacion_maternas = df_salud_familiar_poblacion.poblacion_maternas.astype('int64')
         df_salud_familiar_poblacion['FECHA_CAPITA'] = df_salud_familiar_poblacion['FECHA_CAPITA'].astype('str')
         df_salud_familiar_poblacion['fecha_emision_orden'] = df_salud_familiar_poblacion['fecha_emision_orden'].astype('str')
-        df_salud_familiar_poblacion['estado_empleado'] = df_salud_familiar_poblacion['identificacion_profesional_remite'].apply(state_emp)
+        df_salud_familiar_poblacion['estado_empleado'] = df_salud_familiar_poblacion.apply(lambda x: state_emp(x['identificacion_profesional_remite'],df_empleados),axis=1)
         return df_salud_familiar_poblacion
     except ValueError as err:
         print(err)
@@ -192,8 +204,10 @@ def validate_read(df_validate_rips):
             # Transform
             df_salud_familiar = transform_salud_familiar(df_salud_familiar)
             df_total_maternas = trasnform_rips_auditoria(df_rips_auditoria_obstetricia_2)
-            df_salud_familiar_poblacion = merge_poblaciones_salud_familiar(df_capita_poblaciones,df_total_maternas,df_salud_familiar)
+            df_salud_familiar_poblacion = merge_poblaciones_salud_familiar(df_capita_poblaciones,df_total_maternas,df_salud_familiar,df_empleados)
             df_salud_familiar_poblacion_gestal = merge_empleados_salud_familiar(df_empleados,df_salud_familiar_poblacion)
+            df_salud_familiar_poblacion_gestal = convert_columns_date(df_salud_familiar_poblacion_gestal)
+            df_salud_familiar_poblacion_gestal = convert_columns_number(df_salud_familiar_poblacion_gestal)
             return df_salud_familiar_poblacion_gestal
     except ValueError as err:
         print(err)
