@@ -54,15 +54,15 @@ SQL_BIGQUERY_EXAMENES = """
                 """
 
 SQL_BIGQUERY_PACIENTES = """
-                SELECT g.idPacienteImagen
+                SELECT g.documentoPaciente
                 FROM {} as g
-                WHERE g.idPacienteImagen IN {}
+                WHERE g.documentoPaciente IN {}
                 """
 
 SQL_BIGQUERY_MEDICOS = """
-                SELECT g.idMedicoImagen
+                SELECT g.documentoMedico
                 FROM {} as g
-                WHERE g.idMedicoImagen IN {}
+                WHERE g.documentoMedico IN {}
                 """
 
 SQL_BIGQUERY_FACTURAS = """
