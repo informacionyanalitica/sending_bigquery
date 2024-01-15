@@ -89,12 +89,11 @@ def convert_date_factura(df):
     return df
 
 # Obtener datos no duplicados
-def get_data_no_duplicate(df,validator_column,sql_bigquery,tabla_bigquery):
+def get_data_no_duplicate(df,validator_column,value_unique,sql_bigquery,tabla_bigquery):
     try:
         df_not_duplicates = pd.DataFrame()
         if df.shape[0] >0:
-            valores_unicos = tuple(map(int, df[validator_column]))
-            df_not_duplicates = loadbq.rows_not_duplicates(df,validator_column,sql_bigquery,tabla_bigquery,valores_unicos) 
+            df_not_duplicates = loadbq.rows_not_duplicates(df,validator_column,sql_bigquery,tabla_bigquery,value_unique) 
         return df_not_duplicates
     except ValueError as err:
         print(err)
@@ -112,19 +111,28 @@ df_pacientes = convert_date_pacientes(df_pacientes)
 df_medicos = convert_date_medicos(df_medicos)
 df_facturas = convert_date_factura(df_facturas)
 
-# Validate duplicate
-df_not_duplicates_examenes = get_data_no_duplicate(df_examenes,validator_column_examenes,SQL_BIGQUERY_EXAMENES,tabla_bigquery_examenes)
-time.sleep(5)
-df_not_duplicates_pacientes = get_data_no_duplicate(df_pacientes,validator_column_pacientes,SQL_BIGQUERY_PACIENTES,tabla_bigquery_pacientes)
-time.sleep(5)
-df_not_duplicates_medicos = get_data_no_duplicate(df_medicos,validator_column_medicos,SQL_BIGQUERY_MEDICOS,tabla_bigquery_medicos)
-time.sleep(5)
-df_not_duplicates_facturas = get_data_no_duplicate(df_facturas,validator_column_facturas,SQL_BIGQUERY_FACTURAS,tabla_bigquery_facturas)
+# Select values unique
+valores_unicos_pacientes = tuple(map(str, df_pacientes[validator_column_pacientes]))
+valores_unicos_examenes = tuple(map(int, df_examenes[validator_column_examenes]))
+valores_unicos_medicos = tuple(map(str, df_medicos[validator_column_medicos]))
+valores_unicos_facturas = tuple(map(int, df_facturas[validator_column_facturas]))
 
-# Load bigquery
+# Validate duplicate
+df_not_duplicates_examenes = get_data_no_duplicate(df_examenes,validator_column_examenes,valores_unicos_examenes,SQL_BIGQUERY_EXAMENES,tabla_bigquery_examenes)
+time.sleep(5)
+df_not_duplicates_pacientes = get_data_no_duplicate(df_pacientes,validator_column_pacientes,valores_unicos_pacientes,SQL_BIGQUERY_PACIENTES,tabla_bigquery_pacientes)
+time.sleep(5)
+df_not_duplicates_medicos = get_data_no_duplicate(df_medicos,validator_column_medicos,valores_unicos_medicos,SQL_BIGQUERY_MEDICOS,tabla_bigquery_medicos)
+time.sleep(5)
+df_not_duplicates_facturas = get_data_no_duplicate(df_facturas,validator_column_facturas,valores_unicos_facturas,SQL_BIGQUERY_FACTURAS,tabla_bigquery_facturas)
+
+# # Load bigquery
 loadbq.load_data_bigquery(df_not_duplicates_examenes,tabla_bigquery_examenes)
+time.sleep(5)
 loadbq.load_data_bigquery(df_not_duplicates_pacientes,tabla_bigquery_pacientes)
+time.sleep(5)
 loadbq.load_data_bigquery(df_not_duplicates_medicos,tabla_bigquery_medicos)
+time.sleep(5)
 loadbq.load_data_bigquery(df_not_duplicates_facturas,tabla_bigquery_facturas)
 
 
