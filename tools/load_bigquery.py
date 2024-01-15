@@ -43,7 +43,7 @@ def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     try:
         if len(valores_unicos)==1:
-            valor_unico = '('+str(valores_unicos[0])+')'
+            valor_unico = "('"+str(valores_unicos[0])+"')"
             sql_read = sql_biquery.format(tabla_bigquery,valor_unico)
         elif len(valores_unicos)>1:
              sql_read = sql_biquery.format(tabla_bigquery,valores_unicos) 
