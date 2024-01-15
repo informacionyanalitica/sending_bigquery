@@ -69,8 +69,9 @@ codigo_sedes = {
 project_id_product = 'ia-bigquery-397516'
 dataset_id = 'odontologia'
 table_name = 'detalle_odontologia_capita'
+table_maridb_capita_odontologia = 'detalle_odontologia_capita'
 
-TABLA_BIGQUERY = f'{project_id_product}.{dataset_id}.{table_name}'
+TABLA_BIGQUERY_CAPITA_ODONTOLOGIA = f'{project_id_product}.{dataset_id}.{table_name}'
 
 #Funcion que carga cada archivo de la sede y lo junta en uno solo llamado capita
 def load_capita():
@@ -135,6 +136,17 @@ def convert_columns_number(df):
     df.poblacion_total = df.poblacion_total.astype(int)
     df.edad = df.edad.astype(int)
     return df
+
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
+    try:
+        total_cargue = df_validate_load.totalCargues[0]
+        if  total_cargue == 0:
+            # Cargar mariadb
+            func_process.save_df_server(df_load, table_mariadb, 'analitica')
+            # Cargar bigquery
+            loadbq.load_data_bigquery(df_load,tabla_bigquery)
+    except ValueError as err:
+        print(err)
 
 capita = (
     load_capita()
@@ -214,8 +226,11 @@ detalle_odontologia_horas_capita_poblaciones_edad = clean_values_na(detalle_odon
 detalle_odontologia_horas_capita_poblaciones_edad = convert_columns_number(detalle_odontologia_horas_capita_poblaciones_edad)
 
 
-# Load data bigquery
-loadbq.load_data_bigquery(detalle_odontologia_horas_capita_poblaciones_edad,TABLA_BIGQUERY)
 
-# Load data Mariadb
-func_process.save_df_server(detalle_odontologia_horas_capita_poblaciones_edad,'detalle_odontologia_capita','analitica')
+
+# VALIDATE LOAD
+validate_loads_logs_odontologia_capita =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CAPITA_ODONTOLOGIA)
+
+# Load
+validate_load(validate_loads_logs_odontologia_capita,detalle_odontologia_horas_capita_poblaciones_edad,
+                TABLA_BIGQUERY_CAPITA_ODONTOLOGIA,table_maridb_capita_odontologia)

@@ -15,8 +15,9 @@ project_id_product = 'ia-bigquery-397516'
 dataset_id = 'odontologia'
 table_name = 'odontologia_controlado_med'
 validator_column = 'id_atencion'
+table_maridb_controlado_odontologia = 'odontologia_controlado_med'
 
-TABLA_BIGQUERY = f'{project_id_product}.{dataset_id}.{table_name}'
+TABLA_BIGQUERY_CONTROLADO_ODONTOLOGIA = f'{project_id_product}.{dataset_id}.{table_name}'
 
 
 # CREAR FECHAS
@@ -79,6 +80,19 @@ def convert_columns_str(df):
     df.hora_finaliza_cita = [row.replace('0 days ','') for row in df.hora_finaliza_cita]
     return df
 
+
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
+    try:
+        total_cargue = df_validate_load.totalCargues[0]
+        if  total_cargue == 0:
+            # Cargar mariadb
+            func_process.save_df_server(df_load, table_mariadb, 'analitica')
+            # Cargar bigquery
+            loadbq.load_data_bigquery(df_load,tabla_bigquery)
+    except ValueError as err:
+        print(err)
+
+
 df_datos_rips_odontologia = func_process.load_df_server(sql_datos_rips_odontologia, 'reportes')
 df_datos_rips_odontologia['hora_cita'] = df_datos_rips_odontologia['hora_cita'].astype('str')
 df_datos_rips_odontologia['fecha_consulta'] = func_process.pd.to_datetime(df_datos_rips_odontologia['fecha_consulta'])
@@ -138,8 +152,11 @@ odontologia_controlado_med_f = convert_columns_date(odontologia_controlado_med_f
 # Convert columnas string
 odontologia_controlado_med_f = convert_columns_str(odontologia_controlado_med_f)
 
-# Cargar datos
-func_process.save_df_server(odontologia_controlado_med_f, 'odontologia_controlado_med', 'analitica')
 
-# Save bigquery 
-loadbq.load_data_bigquery(odontologia_controlado_med_f,TABLA_BIGQUERY)
+
+# VALIDATE LOAD
+validate_loads_logs_odontologia_capita =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CONTROLADO_ODONTOLOGIA)
+
+# Load
+validate_load(validate_loads_logs_odontologia_capita,odontologia_controlado_med_f,
+                TABLA_BIGQUERY_CONTROLADO_ODONTOLOGIA,table_maridb_controlado_odontologia)
