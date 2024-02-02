@@ -119,9 +119,8 @@ def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table
         total_cargue_rips = df_validate_rips.totalCargues[0]
         if  total_cargue == 0 and total_cargue_rips>0:
             # Cargar mariadb
-            #func_process.save_df_server(df_load, table_mariadb, 'analitica')
+            func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
-            print(df_load.info())
             loadbq.load_data_bigquery(df_load,tabla_bigquery)
     except ValueError as err:
         print(err)
