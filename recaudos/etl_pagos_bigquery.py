@@ -10,8 +10,9 @@ import load_bigquery as loadbq
 
 
 SQL_PAGOS_BD = """SELECT *
-                FROM pagosHistoricosView AS P
+                FROM pagosHistoricosView AS p
             WHERE date(p.fechaPago) >= adddate(curdate(), interval -7 day)
+            
                 """
                 
 SQL_BIGQUERY = """
@@ -22,7 +23,7 @@ SQL_BIGQUERY = """
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_recaudo = 'recaudos'
-table_name_pagos = 'pagos_partition'
+table_name_pagos = 'pagos'
 validator_column = 'factura'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_recaudo}.{table_name_pagos}'
