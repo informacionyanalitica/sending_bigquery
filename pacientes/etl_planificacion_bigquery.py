@@ -17,10 +17,19 @@ fecha_last_year = f"{(pd.to_datetime(fecha_capita).year-1)}-{pd.to_datetime(fech
 fecha_i = pd.to_datetime(fecha_capita).strftime('%Y-%m-%d')
 fecha_f = f"{pd.to_datetime(fecha_capita).strftime('%Y-%m')}-{pd.to_datetime(fecha_capita).days_in_month}"
 
+columns_required = ['identificacion_paciente','primer_apellido','primer_nombre','sexo','telefono','edad',
+                    'sede_atencion','nombre_sede','regimen','rango_salarial','sw_cronicos','sw_rcv','sw_hipertension',
+                    'sw_diabetes','fecha_ingreso_DM','sw_proteccion_renal','sw_dislipidemia','sw_enfer_autoinmune',
+                    'sw_enfer_coagulacion','sw_asma','sw_epoc','sw_cancer_cervix','sw_cancer_mama','sw_vih','sw_cpr',
+                    'sw_rce','sw_fragil_canguro','sw_oxigeno_dependiente','sw_sospecha_abuso_sexual','sw_tb','sw_obesidad',
+                    'sw_puntaPiramide','sw_domiciliaria','celular','direccion','email','fecha_nacimiento','fecha_cargue',
+                    'sw_insulina','salud_mental','planificacion_familiar','inactiva','gestionada'
+                    ]
+
 sql_poblacion_mujeres_14_49 = """
                                 SELECT *
                                 FROM `ia-bigquery-397516.pacientes.capita` as c 
-                                WHERE (c.sexo = 'F') AND (c.edad BETWEEN 14 AND 49) ORDER BY c.edad;
+                                WHERE (c.sexo = 'F') AND (c.edad BETWEEN '14' AND '49') ORDER BY c.edad;
                             """
 sql_rips_salud_mental = """
                             SELECT 
@@ -178,6 +187,7 @@ poblacion_mujeres_14_49.drop(poblacion_mujeres_14_49.loc[
 validate_loads_logs_planificacion_familiar =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_PLANIFICACION_FAMILIAR)
 validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
+poblacion_mujeres_14_49 = poblacion_mujeres_14_49[columns_required]
 # Load
 validate_load(validate_loads_logs_planificacion_familiar,
               validate_loads_logs_rips,
