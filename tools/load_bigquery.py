@@ -61,9 +61,10 @@ def load_data_bigquery(df_save,tabla_bigquery):
         if not df_save.empty:
             response_save = bq_cloud.write_to_table_no_duplicates(df_save)
             insert_log_cargues_bigquery(response_save[0], response_save[1])
-            print(response_save[0],response_save[1])
+            print(response_save[0],',',response_save[1],',',FECHA_CARGUE)
         else:    
             print('Dataframe sin datos')
+            print(0,',',tabla_bigquery,',',FECHA_CARGUE)
     except Exception as err:
         print(err)
 
