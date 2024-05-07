@@ -49,7 +49,7 @@ def validate_load(df_load):
             valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
             df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
             # Load bigquery
-            loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY)
+            loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY,'WRITE_TRUNCATE')
     except ValueError as err:
         print(err)
 
