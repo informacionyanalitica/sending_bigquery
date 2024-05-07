@@ -25,8 +25,10 @@ validator_column = 'identificacion'
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_turnos}.{table_name_turnos}'
 
 def convert_number_columns(df):
-    # Convertir numeros
+    # Convertir vacios en 0
+    df.hijos.replace('',0, inplace=True)
     df.salario.fillna(0,inplace=True)
+    # Convertir numeros
     df.hijos=df.hijos.astype(int)
     df.salario=df.salario.astype(int)
     return df

@@ -55,11 +55,11 @@ def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
         print(err)
 
 
-def load_data_bigquery(df_save,tabla_bigquery):
+def load_data_bigquery(df_save,tabla_bigquery,if_exists):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     try:
         if not df_save.empty:
-            response_save = bq_cloud.write_to_table_no_duplicates(df_save)
+            response_save = bq_cloud.write_to_table_no_duplicates(df_save,if_exists)
             insert_log_cargues_bigquery(response_save[0], response_save[1])
             print(response_save[0],',',response_save[1],',',FECHA_CARGUE)
         else:    
