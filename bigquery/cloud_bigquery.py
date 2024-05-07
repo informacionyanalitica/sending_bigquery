@@ -29,9 +29,9 @@ class CloudBigQuery:
         except ValueError as err:
             print(err)
 
-    def write_to_table_no_duplicates(self,df):
+    def write_to_table_no_duplicates(self,df,if_exists='WRITE_APPEND'):
         try:
-            job_config  = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
+            job_config  = bigquery.LoadJobConfig(write_disposition=if_exists)
             job = self.client.load_table_from_dataframe(df,f'{self.project_id}.{self.dataset_id}.{self.table_name}', job_config=job_config)
             job.result()
             tabla_bigquery = f'{self.project_id}.{self.dataset_id}.{self.table_name}'
