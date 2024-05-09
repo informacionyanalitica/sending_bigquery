@@ -55,7 +55,7 @@ def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
         print(err)
 
 
-def load_data_bigquery(df_save,tabla_bigquery,if_exists):
+def load_data_bigquery(df_save,tabla_bigquery,if_exists='WRITE_APPEND'):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     try:
         if not df_save.empty:
