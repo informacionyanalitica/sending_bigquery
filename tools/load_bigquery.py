@@ -14,10 +14,17 @@ FECHA_CARGUE = datetime.now()
 YEAR = FECHA_CARGUE.year
 MONTH = FECHA_CARGUE.month
 
-SQL_VALIDATE_LOADS = """ SELECT COUNT(*) AS totalCargues
+SQL_VALIDATE_LOADS_MONTHLY = """ SELECT COUNT(*) AS totalCargues
                         FROM reportes.logsCarguesBigquery AS lg
                         WHERE lg.idBigquery = '{idBigquery}'
                         AND year(lg.fechaCargue) = '{year}' AND MONTH(lg.fechaCargue)='{mes}'
+                        """
+
+
+SQL_VALIDATE_LOADS_DAILY = """ SELECT COUNT(*) AS totalCargues
+                        FROM reportes.logsCarguesBigquery AS lg
+                        WHERE lg.idBigquery = '{idBigquery}'
+                        AND date(lg.fechaCargue) = '{date_load}'
                         """
 
 def instanciar_cloud_bigquery(tabla_bigquery):
@@ -79,7 +86,16 @@ def read_data_bigquery(sql_bigquery,tabla_bigquery):
 
 def validate_loads_monthly(tabla_bigquery):
     try:
-        df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS.format(idBigquery=tabla_bigquery,year=YEAR,mes=MONTH),'reportes')
+        df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_MONTHLY.format(idBigquery=tabla_bigquery,year=YEAR,mes=MONTH),'reportes')
+        return df_validate_loads
+    except ValueError as err:
+        print(err)
+
+def validate_loads_daily(tabla_bigquery):
+    try:
+        df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_DAILY.format(idBigquery=tabla_bigquery,
+                                                                                        date_load=FECHA_CARGUE.date()),
+                                                                                        'reportes')
         return df_validate_loads
     except ValueError as err:
         print(err)
