@@ -161,6 +161,7 @@ def convert_columns_date(df):
 
 def convert_columns_number(df):
     # Convertir numeros
+    df.edad.replace('.',0,inplace=True)
     df.edad = df.edad.astype(int)
     return df
 
@@ -219,6 +220,7 @@ validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 df_salud_familiar_poblacion_gestal = validate_read(validate_loads_logs_rips)
 
 # Load
+
 validate_load(validate_loads_logs_salud_familiar,
               validate_loads_logs_rips,
               df_salud_familiar_poblacion_gestal,
