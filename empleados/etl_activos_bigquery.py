@@ -20,7 +20,7 @@ SQL_BIGQUERY = """
 project_id_product = 'ia-bigquery-397516'
 dataset_id_turnos = 'empleados'
 table_name_turnos = 'activos'
-validator_column = 'identificacion'    
+#validator_column = 'identificacion'    
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_turnos}.{table_name_turnos}'
 
@@ -48,10 +48,10 @@ def validate_load(df_load):
             df_activos_bd = convert_date_columns(df_activos_bd)    
             
             # Obtener datos no duplicados
-            valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
-            df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+            #valores_unicos = tuple(map(str, df_activos_bd[validator_column]))
+            #df_activos_not_duplicates = loadbq.rows_not_duplicates(df_activos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
             # Load bigquery
-            loadbq.load_data_bigquery(df_activos_not_duplicates,TABLA_BIGQUERY,'WRITE_TRUNCATE')
+            loadbq.load_data_bigquery(df_activos_bd,TABLA_BIGQUERY,'WRITE_TRUNCATE')
     except ValueError as err:
         print(err)
 
