@@ -8,7 +8,7 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
+today = func_process.pd.to_datetime(datetime.now() - timedelta(days=25))
 capita_date = func_process.pd.to_datetime(today.strftime('%Y-%m-15'))
 date_capita = capita_date.strftime('%Y-%m-%d')
 date_i = f"{capita_date.strftime('%Y')}-{capita_date.strftime('%m')}-01 00:00:00"
@@ -20,7 +20,7 @@ mes_letra = capita_date.strftime("%B").capitalize()
 # Parametros bigquery
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
-table_name_demografico = 'demograficos'
+table_name_demografico = 'rips_poblaciones'
 table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_rips}.{table_name_demografico}'
@@ -87,6 +87,20 @@ def load_poblacion(sql):
     poblaciones_2021.rename(columns={'FECHA_CAPITA':'fecha_capita', 'NOMBRE_IPS':'nombre_ips'}, inplace= True)
     return poblaciones_2021
 
+def convert_columns_datetime(df):
+    # convetir fechas
+    df.fecha_capita = pd.to_datetime(df.fecha_capita, errors='coerce')
+    df.fecha_cargue = pd.to_datetime(df.fecha_cargue, errors='coerce')
+    df.fecha_nacimiento = pd.to_datetime(df.fecha_nacimiento, errors='coerce')
+    return df
+
+def conver_columns_integer(df):
+    # Convertir numeros
+    df.catidad_poblacion.fillna(0, inplace=True)
+    df.poblacion_total.fillna(0, inplace=True)
+    df.catidad_poblacion = df.catidad_poblacion.astype(int)
+    df.poblacion_total =df.poblacion_total.astype(int)
+    return df
 
 def name_branch(x_df):
     def name(codigo):
@@ -186,7 +200,8 @@ df_entre_15_44 = df_poblacion('Entre 15 y 44 anos', poblaciones_2021_entre_15_44
 df_entre_45_59 = df_poblacion('Entre 45 y 59 anos', poblaciones_2021_entre_45_59, rips_2021)
 df_mayores_60 = df_poblacion('Mayores de 59 anos', poblaciones_2021_mayores_59, rips_2021)
 rips_poblaciones_2021 = func_process.pd.concat([df_menores_6, df_entre_15_44, df_entre_45_59, df_mayores_60], ignore_index= True)
-
+rips_poblaciones_2021 = convert_columns_datetime(rips_poblaciones_2021)
+rips_poblaciones_2021 = conver_columns_integer(rips_poblaciones_2021)
 
 # VALIDATE LOAD
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
