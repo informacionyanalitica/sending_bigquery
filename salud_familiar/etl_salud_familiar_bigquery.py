@@ -113,7 +113,7 @@ def state_emp(id,df_empleados):
     else:
         return 'EXTERNO'
 
-def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb,if_exist='WRITE_APPEND'):
     try:
         total_cargue = df_validate_load.totalCargues[0]
         total_cargue_rips = df_validate_rips.totalCargues[0]
@@ -121,7 +121,7 @@ def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
-            loadbq.load_data_bigquery(df_load,tabla_bigquery)
+            loadbq.load_data_bigquery(df_load,tabla_bigquery,if_exist)
     except ValueError as err:
         print(err)
 
