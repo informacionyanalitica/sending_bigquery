@@ -10,7 +10,6 @@ import func_process
 import load_bigquery as loadbq
 
 
-FECHA_CARGUE = pd.to_datetime(datetime.now().date().strftime('%Y-%m-15'))
 
 COLUMNS_REQUIRED = ['fecha','fecha_realizo_auditoria','mes','ano','examen_monitorear','tipo_examen','sede','rol_profesional','nombre_profesional',
  'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','interrogatorio_medico_completo',
@@ -55,14 +54,14 @@ def convert_number(df):
         df.nota = [val.replace('%','') for val in df.nota]
         df.nota.replace('','0',inplace=True)
         df.nota = df.nota.astype(float)
-        df.nota = [(val/1000) for val in df.nota]
+        df.nota = [(val/100) for val in df.nota]
         return df
     except Exception as err:
         print(err)
 
 def get_columns_rows(df):
     try:
-        df = df[pd.to_datetime(df['Fecha (dd/mm/año)']) == FECHA_CARGUE]
+        #df = df[pd.to_datetime(df['Fecha (dd/mm/año)']) == FECHA_CARGUE]
         df.drop(['Envío de Correo'], axis=1, inplace=True)
         df.columns = COLUMNS_REQUIRED
         return df
@@ -77,16 +76,6 @@ def drop_rows_empty(df):
     except Exception as err:
         print(err)
 
-# Obtener datos no duplicados
-# def validate_rows_duplicate(df,TABLA_BIGQUERY):
-#     try:
-#         df[VALIDATOR_COLUMN] = df.fecha.astype(str) +'-'+ df.cedula.astype(str)+'-'+ df.historia_clinica.astype(str)
-#         valores_unicos = tuple(set(df[VALIDATOR_COLUMN]))
-#         df_rows_not_duplicates = loadbq.rows_not_duplicates(df,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
-#         df_rows_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
-#         return df_rows_not_duplicates
-#     except ValueError as err:
-#         print(err)
 
 def validate_load(df_load_log,df_not_duplicate):
     total_cargues = df_load_log.totalCargues[0]
