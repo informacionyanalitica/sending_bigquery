@@ -18,17 +18,12 @@ COLUMNS_REQUIRED = ['fecha','fecha_realizo_auditoria','mes','ano','examen_monito
  'paciente_reconsultar_urgencias_hospitalizacion','remision_o_CCE_alguna_especializacion','gestion_paraclinicos_solicitados',
  'referencia_contrareferencia_adecuada','analisis_plan','pertinencia','nota','observaciones','datos_completos']
 
-SQL_BIGQUERY = """
-            SELECT ltrim(rtrim(concat(cc.fecha,'-',cc.cedula,'-',cc.historia_clinica))) as compound_key
-            FROM {} as cc
-            WHERE ltrim(rtrim(concat(cc.fecha,'-',cc.cedula,'-',cc.historia_clinica))) in {}
-                """
 
 # DETALLE DATASET BIGQUERY
 project_id_product = 'ia-bigquery-397516'
 dataset_id_gestion_conocimiento = 'gestion_conocimiento'
 table_name_auditores = 'manejo_integral_pacientes'
-VALIDATOR_COLUMN = 'compound_key' 
+
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_gestion_conocimiento}.{table_name_auditores}'
 
