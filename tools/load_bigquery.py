@@ -27,6 +27,13 @@ SQL_VALIDATE_LOADS_DAILY = """ SELECT COUNT(*) AS totalCargues
                         AND date(lg.fechaCargue) = '{date_load}'
                         """
 
+SQL_VALIDATE_LOADS_WEEKLY = """ SELECT COUNT(*) AS totalCargues
+                        FROM reportes.logsCarguesBigquery AS lg
+                        WHERE lg.idBigquery = '{idBigquery}'
+                        AND DATE(lg.fechaCargue) >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
+                        AND DATE(lg.fechaCargue) < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY)
+                        """
+
 def instanciar_cloud_bigquery(tabla_bigquery):
     project_id_product, dataset_id, table_name = tabla_bigquery.split('.')
     try:
@@ -96,6 +103,13 @@ def validate_loads_daily(tabla_bigquery):
         df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_DAILY.format(idBigquery=tabla_bigquery,
                                                                                         date_load=FECHA_CARGUE.date()),
                                                                                         'reportes')
+        return df_validate_loads
+    except ValueError as err:
+        print(err)
+
+def validate_loads_weekly(tabla_bigquery):
+    try:
+        df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_WEEKLY.format(idBigquery=tabla_bigquery),'reportes')
         return df_validate_loads
     except ValueError as err:
         print(err)

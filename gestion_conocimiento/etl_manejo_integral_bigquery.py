@@ -10,7 +10,7 @@ import func_process
 import load_bigquery as loadbq
 
 
-FECHA_CARGUE = datetime.now().date()
+FECHA_CARGUE = pd.to_datetime(datetime.now().date().strftime('%Y-%m-15'))
 
 COLUMNS_REQUIRED = ['fecha','fecha_realizo_auditoria','mes','ano','examen_monitorear','tipo_examen','sede','rol_profesional','nombre_profesional',
  'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','interrogatorio_medico_completo',
@@ -28,7 +28,7 @@ SQL_BIGQUERY = """
 # DETALLE DATASET BIGQUERY
 project_id_product = 'ia-bigquery-397516'
 dataset_id_gestion_conocimiento = 'gestion_conocimiento'
-table_name_auditores = 'auditores'
+table_name_auditores = 'manejo_integral_pacientes'
 VALIDATOR_COLUMN = 'compound_key' 
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_gestion_conocimiento}.{table_name_auditores}'
@@ -53,8 +53,9 @@ def convert_number(df):
         # Clean empty data and signs
         df.nota.fillna('0', inplace=True)  
         df.nota = [val.replace('%','') for val in df.nota]
-        df.nota = [val.replace('','0') for val in df.nota]
-        df.nota = df.nota.astype(int)
+        df.nota.replace('','0',inplace=True)
+        df.nota = df.nota.astype(float)
+        df.nota = [(val/1000) for val in df.nota]
         return df
     except Exception as err:
         print(err)
@@ -77,15 +78,15 @@ def drop_rows_empty(df):
         print(err)
 
 # Obtener datos no duplicados
-def validate_rows_duplicate(df,TABLA_BIGQUERY):
-    try:
-        df[VALIDATOR_COLUMN] = df.fecha.astype(str) +'-'+ df.cedula.astype(str)+'-'+ df.historia_clinica.astype(str)
-        valores_unicos = tuple(set(df[VALIDATOR_COLUMN]))
-        df_rows_not_duplicates = loadbq.rows_not_duplicates(df,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
-        df_rows_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
-        return df_rows_not_duplicates
-    except ValueError as err:
-        print(err)
+# def validate_rows_duplicate(df,TABLA_BIGQUERY):
+#     try:
+#         df[VALIDATOR_COLUMN] = df.fecha.astype(str) +'-'+ df.cedula.astype(str)+'-'+ df.historia_clinica.astype(str)
+#         valores_unicos = tuple(set(df[VALIDATOR_COLUMN]))
+#         df_rows_not_duplicates = loadbq.rows_not_duplicates(df,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+#         df_rows_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
+#         return df_rows_not_duplicates
+#     except ValueError as err:
+#         print(err)
 
 def validate_load(df_load_log,df_not_duplicate):
     total_cargues = df_load_log.totalCargues[0]
@@ -105,11 +106,11 @@ def execution_load():
             df_auditor_clean = drop_rows_empty(df_auditor)
             df_auditor_transform = convert_date(df_auditor_clean)
             df_auditor_transform = convert_number(df_auditor_clean)
+            df_auditor_transform['auditor'] = name
             df_auditores = pd.concat([df_auditores,df_auditor_transform])
         # VALIDATE DATA
-        df_rows_not_duplicates = validate_rows_duplicate(df_auditores,TABLA_BIGQUERY)
-        validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY)
-        validate_load(validate_loads_logs,df_rows_not_duplicates)
+        validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
+        validate_load(validate_loads_logs,df_auditores)
     except Exception as err:
         print(err)
 
