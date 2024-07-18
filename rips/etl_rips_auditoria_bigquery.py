@@ -9,6 +9,7 @@ import func_process
 import load_bigquery as loadbq
 
 
+
 # GENERAMOS UNA FECHA PARA QUE EL INFORME TOME LOS DATOS DEL MES A PROCESAR
 #today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
 today = datetime.now()
@@ -187,7 +188,7 @@ def validate_rows_duplicate(df_rips):
     except Exception as err:
         print(err)
     
-def read_dataset():
+def read_dataset_rips():
     try:
         df_rips_auditoria = func_process.load_df_server(sql_rips_auditoria, 'reportes')       
         if df_rips_auditoria.shape[0] ==0:
@@ -196,7 +197,7 @@ def read_dataset():
     except Exception as err:
         print(err)
 
-df_rips_auditoria = read_dataset()
+df_rips_auditoria = read_dataset_rips()
 list_poblacion_argentina = add_poblacion_mes(list_poblacion_argentina, 'ARGENTINA')
 list_poblacion_especialistas = add_poblacion_mes(list_poblacion_especialistas, 'ESPECIALISTAS')
 df_capita_poblaciones = func_process.load_df_server(sql_capita_poblaciones, 'analitica')
