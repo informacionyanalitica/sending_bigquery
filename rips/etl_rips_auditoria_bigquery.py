@@ -10,17 +10,18 @@ import load_bigquery as loadbq
 
 
 # GENERAMOS UNA FECHA PARA QUE EL INFORME TOME LOS DATOS DEL MES A PROCESAR
-today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
+#today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
+today = datetime.now()
 fecha_capita = func_process.pd.to_datetime(today.strftime('%Y-%m-15'))
 #fecha_capita = func_process.pd.to_datetime(input('Escriba la fecha de la capita del mes a cargar, AAAA-MM-DD: '))
 
 year = str(fecha_capita.year)
 mes_letra = fecha_capita.strftime('%B').upper()
 mes_numero = fecha_capita.strftime('%m')
-last_day = str(fecha_capita.days_in_month)
+#last_day = str(fecha_capita.days_in_month)
 
-fecha_i = f"{year}-{mes_numero}-01 00:00:00"
-fecha_f = f"{year}-{mes_numero}-{last_day} 23:59:59"
+#fecha_i = f"{year}-{mes_numero}-01 00:00:00"
+#fecha_f = f"{year}-{mes_numero}-{last_day} 23:59:59"
 
 fecha = fecha_capita.strftime("%Y-%m-%d")
 # Diccionario para mapear los nombres de las sedes por medio del codigo (como texto)
@@ -119,13 +120,19 @@ sql_gestal = """
                 FROM empleados_2019
             """
 
-
+SQL_BIGQUERY =  """
+                SELECT concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) as column_validator
+                    FROM {} as g
+                    WHERE date(g.hora_fecha) >= date_sub(current_date() , INTERVAL 1 MONTH)
+                    and concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) IN {} """
 
 # Parametros bigquery
+
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
 table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
+VALIDATOR_COLUMN = 'column_validator'
 
 def convert_dates(df):
     # Convertir fechas
@@ -169,6 +176,17 @@ def validate_load(df_validate_load,df_load):
     except ValueError as err:
         print(err)
 
+def validate_rows_duplicate(df_rips):
+    try:
+        df_rips[VALIDATOR_COLUMN] = df_rips.hora_fecha.astype(str)+'-'+ df_rips.orden.astype(str)+'-'+df_rips.codigo_sura.astype(str) 
+        valores_unicos = tuple(map(str, df_rips[VALIDATOR_COLUMN]))
+        df_rips_not_duplicates = loadbq.rows_not_duplicates(df_rips,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+        if df_rips_not_duplicates.shape[0] == 0:
+            raise SystemExit
+        return df_rips_not_duplicates
+    except Exception as err:
+        print(err)
+    
 def read_dataset():
     try:
         df_rips_auditoria = func_process.load_df_server(sql_rips_auditoria, 'reportes')       
@@ -281,6 +299,9 @@ df_rips_auditoria_mes_p_sede_gestal.columns = df_rips_auditoria_mes_p_sede_gesta
 # VALIDATE LOAD
 validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY)
 
+# VALIDATE ROWS DUPLICATE
+df_rips_not_duplicates = validate_rows_duplicate(df_rips_auditoria_mes_p_sede_gestal)
+
 # # Load data to server
-validate_load(validate_loads_logs,df_rips_auditoria_mes_p_sede_gestal)
+validate_load(validate_loads_logs,df_rips_not_duplicates)
 
