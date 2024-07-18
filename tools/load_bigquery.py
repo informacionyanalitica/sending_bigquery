@@ -68,6 +68,16 @@ def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
     except ValueError as err:
         print(err)
 
+def rows_duplicates_last_month(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
+    bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
+    try:
+        sql_read = sql_biquery.format(tabla_bigquery) 
+        rows_save_bigquery = bq_cloud.read_table(sql_read)
+        # Obtener valores no duplicados
+        df_save = df_bd[~df_bd[column].isin(rows_save_bigquery[column].to_list())]
+        return df_save
+    except ValueError as err:
+        print(err)
 
 def load_data_bigquery(df_save,tabla_bigquery,if_exists='WRITE_APPEND'):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
@@ -79,6 +89,14 @@ def load_data_bigquery(df_save,tabla_bigquery,if_exists='WRITE_APPEND'):
         else:    
             print('Dataframe sin datos')
             print(0,',',tabla_bigquery,',',FECHA_CARGUE)
+    except Exception as err:
+        print(err)
+
+def update_data_bigquery(sql_update,tabla_bigquery):
+    bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
+    try:
+        response_update = bq_cloud.update_table(sql_update)
+        return response_update
     except Exception as err:
         print(err)
 

@@ -39,7 +39,15 @@ class CloudBigQuery:
             return [job.output_rows,tabla_bigquery]
         except Exception as err:
             print(err)
-        
+    
+    def update_table(self,query):
+        try:
+            query_update = self.client.query(query)
+            query_update.result()
+            rows_affected = query_update.num_dml_affected_rows
+            return print(f'Filas afectadas : {rows_affected}') 
+        except Exception as err:
+            print(f'Error al actualizar la tabla: {err}')
         
     def read_table(self, query):
         try:
