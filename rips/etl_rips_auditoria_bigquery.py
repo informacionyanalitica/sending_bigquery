@@ -24,7 +24,7 @@ mes_numero = fecha_capita.strftime('%m')
 #fecha_i = f"{year}-{mes_numero}-01 00:00:00"
 #fecha_f = f"{year}-{mes_numero}-{last_day} 23:59:59"
 
-fecha = fecha_capita.strftime("%Y-%m-%d")
+FECHA = fecha_capita.strftime("%Y-%m-%d")
 # Diccionario para mapear los nombres de las sedes por medio del codigo (como texto)
 n_ips = {
     '35':'CENTRO',
@@ -63,16 +63,19 @@ list_poblacion_especialistas = [['2022-01-15', 'ESPECIALISTAS', 5796], ['2022-02
                 ['2023-01-15', 'ESPECIALISTAS', 10613], ['2023-02-15', 'ESPECIALISTAS', 11144]
                 ]
 #CARGAMOS LA TABLAS TABLAS QUE VAMOS A ORGANIZAR
-sql_capita_poblaciones = f"""
-                            SELECT 
-                                FECHA_CAPITA, 
+sql_capita_poblaciones = """
+                           SELECT 
+                                DATE(FECHA_CAPITA) AS FECHA_CAPITA, 
                                 NOMBRE_IPS, 
                                 POBLACION_TOTAL 
-                            FROM capitas_poblaciones 
-                            WHERE FECHA_CAPITA = '{fecha_capita}';
+                            FROM `ia-bigquery-397516.pacientes.capitas_poblaciones` 
+                            WHERE DATE(FECHA_CAPITA) = '{fecha_capita}';
                         """
+SQL_LAST_FECHA_LOAD = """  SELECT  MAX(DATE(rp.hora_fecha)) AS last_hora_fecha
+                            FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2` as rp
+                            """
 
-sql_rips_auditoria = f"""
+sql_rips_auditoria = """
                         SELECT 
                             hora_fecha, 
                             orden, 
@@ -95,7 +98,9 @@ sql_rips_auditoria = f"""
                             horas_observacion, 
                             fecha_cargue 
                         FROM reportes.rips 
-                        WHERE  date(hora_fecha)= CURDATE();
+                        WHERE  date(hora_fecha) BETWEEN '{last_date_load}' AND CURDATE()
+                        ;
+
                     """
 sql_empleados = """
                     SELECT * 
@@ -125,14 +130,32 @@ SQL_BIGQUERY =  """
                 SELECT concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) as column_validator
                     FROM {} as g
                     WHERE date(g.hora_fecha) >= date_sub(current_date() , INTERVAL 1 MONTH)
-                    and concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) IN {} """
+                     """
+
+SQL_UPDATE_POBLACION = """
+                     UPDATE `ia-bigquery-397516.rips.rips_auditoria_poblacion_2` AS rp
+                    SET rp.poblacion_total = cp.poblacion_total,
+                        rp.poblacion_total_coopsana = cp.total_coopsana
+                    FROM (SELECT DATE(cp.fecha_capita) AS fecha_capita,cp.codigo_ips,cp.poblacion_total,
+                            SUM(cp.poblacion_total)OVER(PARTITION BY date(cp.fecha_capita) )as total_coopsana
+                            FROM `ia-bigquery-397516.pacientes.capitas_poblaciones` as cp
+                            WHERE cp.nombre_ips != 'COOPSANA IPS') as cp
+                    WHERE rp.ips= cp.codigo_ips 
+                    AND  date(rp.fecha_capita) =cp.fecha_capita 
+                    AND DATE(rp.fecha_capita) >= date_sub(current_date(), interval 1 MONTH);
+                    AND rp.poblacion_total != cp.poblacion_total
+                """
 
 # Parametros bigquery
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
+dataset_id_pacientes = 'pacientes'
 table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
+table_name_capitas_poblaciones = 'capitas_poblaciones'
+
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
+TABLA_BIGQUERY_PACIENTES = f'{project_id_product}.{dataset_id_pacientes}.{table_name_capitas_poblaciones}'
 VALIDATOR_COLUMN = 'column_validator'
 
 def convert_dates(df):
@@ -170,6 +193,8 @@ def validate_load(df_validate_load,df_load):
     try:
         total_cargue = df_validate_load.totalCargues[0]
         if total_cargue == 0:
+             # Update poblacion
+            loadbq.update_data_bigquery(SQL_UPDATE_POBLACION,TABLA_BIGQUERY)
             # Cargar mariadb
             func_process.save_df_server(df_load,'rips_auditoria_poblacion_2','analitica')
             # Cargar bigquery
@@ -181,7 +206,8 @@ def validate_rows_duplicate(df_rips):
     try:
         df_rips[VALIDATOR_COLUMN] = df_rips.hora_fecha.astype(str)+'-'+ df_rips.orden.astype(str)+'-'+df_rips.codigo_sura.astype(str) 
         valores_unicos = tuple(map(str, df_rips[VALIDATOR_COLUMN]))
-        df_rips_not_duplicates = loadbq.rows_not_duplicates(df_rips,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df_rips,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+        df_rips_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
         if df_rips_not_duplicates.shape[0] == 0:
             raise SystemExit
         return df_rips_not_duplicates
@@ -190,32 +216,44 @@ def validate_rows_duplicate(df_rips):
     
 def read_dataset_rips():
     try:
-        df_rips_auditoria = func_process.load_df_server(sql_rips_auditoria, 'reportes')       
+        last_hora_fecha = loadbq.read_data_bigquery(SQL_LAST_FECHA_LOAD,TABLA_BIGQUERY)['last_hora_fecha'][0]
+        df_rips_auditoria = func_process.load_df_server(sql_rips_auditoria.format(last_date_load=last_hora_fecha), 'reportes')       
         if df_rips_auditoria.shape[0] ==0:
             raise SystemExit
         return df_rips_auditoria
     except Exception as err:
         print(err)
 
+def get_capitas_poblaciones():
+    try:
+        df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones.format(fecha_capita=FECHA),TABLA_BIGQUERY_PACIENTES)   
+        if df_capita_poblaciones.shape[0]== 0:
+            fecha_capita_anterior = func_process.pd.to_datetime((pd.to_datetime(FECHA) - timedelta(days=20))).strftime('%Y-%m-15')
+            df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones.format(fecha_capita=fecha_capita_anterior),TABLA_BIGQUERY_PACIENTES)   
+            df_capita_poblaciones['POBLACION_TOTAL'] = 0
+            df_capita_poblaciones['FECHA_CAPITA'] = FECHA
+        return df_capita_poblaciones
+    except Exception as err:
+        print(err)
+
 df_rips_auditoria = read_dataset_rips()
 list_poblacion_argentina = add_poblacion_mes(list_poblacion_argentina, 'ARGENTINA')
 list_poblacion_especialistas = add_poblacion_mes(list_poblacion_especialistas, 'ESPECIALISTAS')
-df_capita_poblaciones = func_process.load_df_server(sql_capita_poblaciones, 'analitica')
+df_capita_poblaciones = get_capitas_poblaciones()
 sede_gestal = func_process.load_df_server(sql_gestal, 'reportes')
+
 
 #Sacamos la poblacion capitada en la Sede Argentina
 poblacion_argentina = func_process.pd.DataFrame(list_poblacion_argentina,
     columns= ['FECHA_CAPITA', 'NOMBRE_IPS', 'POBLACION_TOTAL'])
 
-poblacion_argentina['FECHA_CAPITA'] = func_process.pd.to_datetime(poblacion_argentina['FECHA_CAPITA'])
-df_capita_poblaciones.FECHA_CAPITA = func_process.pd.to_datetime(df_capita_poblaciones.FECHA_CAPITA)
-
 #Sacamos la poblacion capitada en la Sede Especialistas
 poblacion_especialistas = func_process.pd.DataFrame(list_poblacion_especialistas,
                                                     columns= ['FECHA_CAPITA', 'NOMBRE_IPS', 'POBLACION_TOTAL'])
-
-poblacion_especialistas['FECHA_CAPITA'] = func_process.pd.to_datetime(poblacion_especialistas['FECHA_CAPITA'])
+poblacion_argentina['FECHA_CAPITA'] = func_process.pd.to_datetime(poblacion_argentina['FECHA_CAPITA'])
 df_capita_poblaciones.FECHA_CAPITA = func_process.pd.to_datetime(df_capita_poblaciones.FECHA_CAPITA)
+poblacion_especialistas['FECHA_CAPITA'] = func_process.pd.to_datetime(poblacion_especialistas['FECHA_CAPITA'])
+
 
 #Dejamos solamente las poblaciones del mes a procesar
 poblacion_argentina_mes = poblacion_argentina[poblacion_argentina.FECHA_CAPITA == fecha_capita.strftime('%Y-%m-%d')]
