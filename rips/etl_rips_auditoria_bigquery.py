@@ -279,7 +279,7 @@ df_rips_auditoria_mes_p_sede_gestal = convert_numbers(df_rips_auditoria_mes_p_se
 df_rips_auditoria_mes_p_sede_gestal.columns = df_rips_auditoria_mes_p_sede_gestal.columns.str.lower()
 
 # VALIDATE LOAD
-validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
+validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY)
 
 # # Load data to server
 validate_load(validate_loads_logs,df_rips_auditoria_mes_p_sede_gestal)
