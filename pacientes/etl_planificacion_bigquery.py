@@ -29,7 +29,7 @@ columns_required = ['identificacion_paciente','primer_apellido','primer_nombre',
 sql_poblacion_mujeres_14_49 = """
                                 SELECT *
                                 FROM `ia-bigquery-397516.pacientes.capita` as c 
-                                WHERE (c.sexo = 'F') AND (c.edad BETWEEN '14' AND '49') ORDER BY c.edad;
+                                WHERE (c.sexo = 'F') AND (c.edad BETWEEN 14 AND 49) ORDER BY c.edad;
                             """
 sql_rips_salud_mental = """
                             SELECT 
