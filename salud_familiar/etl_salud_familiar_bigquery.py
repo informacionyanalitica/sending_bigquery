@@ -113,11 +113,10 @@ def state_emp(id,df_empleados):
     else:
         return 'EXTERNO'
 
-def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb,if_exist='WRITE_APPEND'):
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb,if_exist='WRITE_APPEND'):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        total_cargue_rips = df_validate_rips.totalCargues[0]
-        if  total_cargue == 0 and total_cargue_rips>0:
+        if  total_cargue == 0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
@@ -192,10 +191,10 @@ def merge_empleados_salud_familiar(df_empleados,df_salud_familiar_poblacion):
     except ValueError as err:
         print(err)
 
-def validate_read(df_validate_rips):
+def validate_read(df_validate_load):
     try:
-        total_cargue_rips = df_validate_rips.totalCargues[0]
-        if  total_cargue_rips>0:
+        total_cargue = df_validate_load.totalCargues[0]
+        if  total_cargue==0:
             #Read Data
             df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones,TABLA_BIGQUERY_PACIENTES)
             df_salud_familiar = func_process.load_df_server(sql_salud_familiar, 'reportes')
@@ -214,15 +213,12 @@ def validate_read(df_validate_rips):
 
 # VALIDATE LOAD
 validate_loads_logs_salud_familiar =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_SALUD_FAMILIAR)
-validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
 # Read Data
-df_salud_familiar_poblacion_gestal = validate_read(validate_loads_logs_rips)
+df_salud_familiar_poblacion_gestal = validate_read(validate_loads_logs_salud_familiar)
 
 # Load
-
 validate_load(validate_loads_logs_salud_familiar,
-              validate_loads_logs_rips,
               df_salud_familiar_poblacion_gestal,
               TABLA_BIGQUERY_SALUD_FAMILIAR,
               table_maridb_salud_familiar)
