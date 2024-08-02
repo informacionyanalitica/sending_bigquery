@@ -21,10 +21,9 @@ mes_letra = capita_date.strftime("%B").capitalize()
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
 table_name_demografico = 'rips_poblaciones'
-table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_rips}.{table_name_demografico}'
-TABLA_BIGQUERY_RIPS = f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
+
 
 sql_rips = f"""SELECT 
                     hora_fecha, 
@@ -169,11 +168,10 @@ def df_poblacion(poblacion, df_poblacion, df_rips):
     df_final.rename(columns={df_final.columns[-1]:'poblacion_total'}, inplace= True)
     return df_final
 
-def validate_load(df_validate_load,df_validate_load_rips,df_load):
+def validate_load(df_validate_load,df_load):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        total_cargue_rips = df_validate_load_rips.totalCargues[0]
-        if total_cargue == 0 and total_cargue_rips>0:
+        if total_cargue == 0:
             # Cargar mariadb
             func_process.save_df_server(df_load,'rips_poblaciones','analitica')
             # Cargar bigquery
@@ -205,7 +203,6 @@ rips_poblaciones_2021 = conver_columns_integer(rips_poblaciones_2021)
 
 # VALIDATE LOAD
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
-validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
 # Load data to server
-validate_load(validate_loads_logs,validate_loads_logs_rips,rips_poblaciones_2021)
+validate_load(validate_loads_logs,rips_poblaciones_2021)
