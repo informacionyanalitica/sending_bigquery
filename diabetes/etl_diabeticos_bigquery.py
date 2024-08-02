@@ -233,16 +233,15 @@ def validate_rows_duplicate(df,TABLA_BIGQUERY):
     except ValueError as err:
         print(err)
 
-def execution_load(detalle_df_save,validate_load_rips):
-    total_cargue = validate_load_rips.totalCargues[0]
-    if  total_cargue > 0:
-        for row in range(detalle_df_save.shape[0]):
-            TABLA_BIGQUERY = detalle_df_save.tabla_bigquery.iloc[row]
-            table_mariadb = detalle_df_save.tabla_mariadb.iloc[row]
-            df = detalle_df_save.name_df.iloc[row]
-            if_exist_bigquery =  detalle_df_save.if_exist_bigquery.iloc[row]
-            if_exist_mariadb =  detalle_df_save.if_exist_mariadb.iloc[row]
-            try:
+def execution_load(detalle_df_save):
+    try:
+        if  detalle_df_save.shape[0] > 0:
+            for row in range(detalle_df_save.shape[0]):
+                TABLA_BIGQUERY = detalle_df_save.tabla_bigquery.iloc[row]
+                table_mariadb = detalle_df_save.tabla_mariadb.iloc[row]
+                df = detalle_df_save.name_df.iloc[row]
+                if_exist_bigquery =  detalle_df_save.if_exist_bigquery.iloc[row]
+                if_exist_mariadb =  detalle_df_save.if_exist_mariadb.iloc[row]
                 # VALIDATE DUPLICATE
                 df_rows_not_duplicates = validate_rows_duplicate(df,TABLA_BIGQUERY)
                 #VALIDATE LOGS
@@ -250,8 +249,10 @@ def execution_load(detalle_df_save,validate_load_rips):
                 #Load
                 validate_load(validate_loads_logs,df_rows_not_duplicates,TABLA_BIGQUERY,table_mariadb,if_exist_bigquery,if_exist_mariadb)
                 time.sleep(5)
-            except Exception as error:
-                print(error)
+        else:
+            raise SystemExit
+    except Exception as error:
+            print(error)
             
 
 def creatinina(iden):
@@ -828,9 +829,6 @@ detalle_df_save = pd.DataFrame({
 # Save data Hb1Ac_70
 df_Hb1Ac_last_date_70_no_telemedicina_no_presenciales.to_excel(f"Hb1Ac_70_{mes}.xlsx", index=False)
 
-# Validate load rips
-validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS_AUDITORIA)
-
-execution_load(detalle_df_save,validate_loads_logs_rips)
+execution_load(detalle_df_save)
 
 
