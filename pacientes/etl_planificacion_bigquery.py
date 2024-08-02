@@ -94,11 +94,6 @@ table_name_planificacion_familiar = 'planificacion_familiar'
 table_maridb_planificacion_familiar = 'planificacion_familiar'
 TABLA_BIGQUERY_PLANIFICACION_FAMILIAR = f'{project_id_product}.{dataset_id_pacientes}.{table_name_planificacion_familiar}'
 
-# Rips
-dataset_id_rips = 'rips'
-table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
-TABLA_BIGQUERY_RIPS = f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
-
 # Capita
 dataset_id_pacientes = 'pacientes'
 table_name_capita = 'capita'
@@ -124,11 +119,10 @@ def control_planificacion_familiar(id):
     if (len (rips_planificacion_familiar[rips_planificacion_familiar['identificacion_pac'] == id]) > 0):
         return rips_planificacion_familiar[rips_planificacion_familiar['identificacion_pac'] == id].hora_fecha.max()
 
-def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        total_cargue_rips = df_validate_rips.totalCargues[0]
-        if  total_cargue == 0 and total_cargue_rips>0:
+        if  total_cargue == 0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
@@ -185,12 +179,10 @@ poblacion_mujeres_14_49.drop(poblacion_mujeres_14_49.loc[
 
 # VALIDATE LOAD
 validate_loads_logs_planificacion_familiar =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_PLANIFICACION_FAMILIAR)
-validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
 poblacion_mujeres_14_49 = poblacion_mujeres_14_49[columns_required]
 # Load
 validate_load(validate_loads_logs_planificacion_familiar,
-              validate_loads_logs_rips,
               poblacion_mujeres_14_49,
               TABLA_BIGQUERY_PLANIFICACION_FAMILIAR,
               table_maridb_planificacion_familiar)
