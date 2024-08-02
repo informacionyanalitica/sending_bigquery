@@ -44,17 +44,16 @@ sql_lab_PIE_pos = f"""
                     AND (fechaValidacionSueltos BETWEEN '{fecha}' AND '{fecha_f}')
                 """
 sql_rips_cpr = f"""
-            SELECT 
-                * 
-            FROM rips_auditoria_poblacion_2 
+            SELECT * 
+            FROM  `ia-bigquery-397516.rips.rips_auditoria_poblacion_2` 
             WHERE (codigo_sura IN ('70100','7000075','70101','7000076')) 
                 AND (fecha_capita >= '{fecha_capita}');
             """
 sql_rips_cpr_nine = f"""
-                        SELECT * 
-                        FROM rips_auditoria_poblacion_2 
+                       SELECT * 
+                        FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2` 
                         WHERE (codigo_sura IN ('70100','70101','7000075','7000076'))
-                            AND fecha_capita >= adddate(CURDATE(), INTERVAL -9 MONTH)
+                            AND DATE(fecha_capita) >= DATE_SUB(CURRENT_DATE(), INTERVAL 9 MONTH)
                         ORDER BY fecha_capita;
                     """
 #Creamos funcion para agregar el nombre del programa
@@ -68,11 +67,10 @@ def n_programa(codigo_sura):
     elif codigo_sura == '7000076':
         return 'ControlCPR Telemedicina'
     
-def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        total_rips = df_validate_rips.totalCargues[0]
-        if  total_cargue == 0 and total_rips >0:
+        if  total_cargue == 0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
@@ -87,14 +85,15 @@ def convert_columns_date(df):
 def convert_columns_numeric(df):
     df.indicador = df.indicador.astype(float)
     return df
+
 ## CARGAMOS INFORMACION DE LA TABLA RIPS
 lab_PIE = func_process.load_df_server(sql_lab_PIE_pos, 'reportes')
-rips_cpr = func_process.load_df_server(sql_rips_cpr, 'analitica')
-rips_cpr_nine = func_process.load_df_server(sql_rips_cpr_nine, 'analitica')
+rips_cpr = loadbq.read_data_bigquery(sql_rips_cpr, TABLA_BIGQUERY_RIPS)
+rips_cpr_nine = loadbq.read_data_bigquery(sql_rips_cpr_nine, TABLA_BIGQUERY_RIPS)
 
 lab_PIE['fecha_capita'] = fecha_capita
-rips_cpr.iloc[:, [1,23]] = rips_cpr.iloc[:, [1,23]].apply(func_process.pd.to_datetime, errors='coerce')
-rips_cpr_nine.iloc[:, [1,23]] = rips_cpr_nine.iloc[:, [1,23]].apply(func_process.pd.to_datetime, errors='coerce')
+rips_cpr.iloc[:, [0,22]] = rips_cpr.iloc[:, [0,22]].apply(func_process.pd.to_datetime, errors='coerce')
+rips_cpr_nine.iloc[:, [0,22]] = rips_cpr_nine.iloc[:, [0,22]].apply(func_process.pd.to_datetime, errors='coerce')
 rips_cpr = rips_cpr[rips_cpr['hora_fecha'] <= fecha_f]
 rips_cpr_nine = rips_cpr_nine[rips_cpr_nine['hora_fecha'] <= fecha_f]
 
@@ -103,6 +102,7 @@ ingreso_cpr = rips_cpr[['hora_fecha', 'identificacion_pac', 'ips', 'codigo_sura'
 rips_cpr_resumen = rips_cpr.groupby(['fecha_capita', 'nombre_ips', 'codigo_sura', 'programa']).agg({'identificacion_pac':'count'}).reset_index().rename(columns={'identificacion_pac':'consultas'})
 rips_cpr_resumen_totales = rips_cpr_resumen.groupby(['fecha_capita', 'codigo_sura', 'programa']).agg({'consultas':'sum'}).reset_index()
 rips_cpr_resumen_totales.insert(1, 'nombre_ips', 'COOPSANA IPS')
+
 resumen_cpr = func_process.pd.concat([rips_cpr_resumen, rips_cpr_resumen_totales]).sort_values(by=['fecha_capita', 'codigo_sura']).reset_index(drop=True)
 resumen_cpr['fecha_capita'] = resumen_cpr['fecha_capita'].astype('str')
 
@@ -111,7 +111,6 @@ rips_cpr_nine.insert(15, 'programa', rips_cpr_nine['codigo_sura'].apply(n_progra
 rips_cpr_nine.insert(17, 'numerador', rips_cpr_nine['codigo_sura'].apply(lambda x: 1 if ((x == '70100') | (x =='70101') | (x =='7000075') | (x =='7000076')) else 0))
 rips_cpr_nine.insert(18, 'denominador', rips_cpr_nine['codigo_sura'].apply(lambda x: 1 if ((x == '70100') | (x =='7000075')) else 0))
 rips_cpr_nine_indicador = rips_cpr_nine.groupby(['nombre_ips']).agg({'numerador':'sum', 'denominador':'sum'}).reset_index()
-
 row_total_coopsana = pd.Series({'nombre_ips':'COOPSANA IPS',
                           'numerador':rips_cpr_nine_indicador.numerador.sum(),
                           'denominador':rips_cpr_nine_indicador.denominador.sum()
@@ -132,11 +131,10 @@ rips_cpr_nine_indicador = convert_columns_numeric(rips_cpr_nine_indicador)
 # VALIDATE LOAD
 validate_loads_logs_resumen_cpr =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RESUMEN)
 validate_loads_logs_indicador_cpr =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_INDICADOR)
-validate_loads_logs_rips =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_RIPS)
 
 # Load data to server
 #-- Resumen
-validate_load(validate_loads_logs_resumen_cpr,validate_loads_logs_rips,resumen_cpr,TABLA_BIGQUERY_RESUMEN,table_name_resumen_cpr)
+validate_load(validate_loads_logs_resumen_cpr,resumen_cpr,TABLA_BIGQUERY_RESUMEN,table_name_resumen_cpr)
 #-- Indicador
-validate_load(validate_loads_logs_indicador_cpr,validate_loads_logs_rips,rips_cpr_nine_indicador,TABLA_BIGQUERY_INDICADOR,table_name_indicador_cpr)
+validate_load(validate_loads_logs_indicador_cpr,rips_cpr_nine_indicador,TABLA_BIGQUERY_INDICADOR,table_name_indicador_cpr)
 
