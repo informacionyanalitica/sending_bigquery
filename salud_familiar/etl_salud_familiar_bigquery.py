@@ -160,7 +160,7 @@ def convert_columns_date(df):
 
 def convert_columns_number(df):
     # Convertir numeros
-    df.edad.replace('.',0,inplace=True)
+    df.edad = df.edad.str.replace(r'[a-zA-Z]', '', regex=True)
     df.edad = df.edad.astype(int)
     return df
 
