@@ -12,7 +12,7 @@ import func_process
 import load_bigquery as loadbq
 
 # Configurar el locale a español 
-locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+#locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
 fecha_capita = pd.to_datetime(datetime.now().date())
 fecha = func_process.pd.to_datetime(str(fecha_capita.year)+'-'+str(fecha_capita.month)+'-01')
