@@ -14,7 +14,7 @@ import load_bigquery as loadbq
 
 SQL_CITOLOGIAS_BD = """ SELECT *
                 FROM reportes.citologias AS r
-                WHERE r.fecha_real = CURDATE()
+                WHERE r.fecha_real = '2024-08-08'
             """
                
 SQL_BIGQUERY = """
@@ -36,15 +36,23 @@ def converti_columns_date(df):
     df.fecha_real = pd.to_datetime(df.fecha_real, errors='coerce')
     return df
 
+# Obtener datos no duplicados
+def execution_load(df_citologias):
+    try:
+        if df_citologias.shape[0] > 0:
+            valores_unicos = tuple(map(int, df_citologias[validator_column]))
+            df_citologias_not_duplicates = loadbq.rows_not_duplicates(df_citologias,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+            loadbq.load_data_bigquery(df_citologias_not_duplicates,TABLA_BIGQUERY)
+        else:
+            raise SystemExit
+    except Exception as err:
+        print(err)
+
 # Leer datos
 df_citologias_bd = func_process.load_df_server(SQL_CITOLOGIAS_BD, 'reportes')   
-
 # Convertir fechas
 df_citologias = converti_columns_date(df_citologias_bd)
 
-# Obtener datos no duplicados
-valores_unicos = tuple(map(int, df_citologias[validator_column]))
-df_citologias_not_duplicates = loadbq.rows_not_duplicates(df_citologias,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
-
 # Cargar a bigquery
-loadbq.load_data_bigquery(df_citologias_not_duplicates,TABLA_BIGQUERY)
+execution_load(df_citologias)
+
