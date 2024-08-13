@@ -1,0 +1,5 @@
+/* CSS para centrar la tabla */
+.contenedor-tabla {
+    margin: 0 auto; /* Margen automático a izquierda y derecha */
+    width: 10%; /* Anchura de la tabla, ajustable según tus necesidades */
+}
