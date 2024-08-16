@@ -11,7 +11,7 @@ import load_bigquery as loadbq
 
 SQL_TURNOS_BD = """ SELECT *
             FROM reportes.turnosAnioActual as t
-            where date(t.fecha_turno) >= adddate(curdate(), interval -7 day)
+            where date(t.fecha_turno) = CURDATE()
             """
                
 SQL_BIGQUERY = """

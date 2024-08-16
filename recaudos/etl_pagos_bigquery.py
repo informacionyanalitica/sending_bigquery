@@ -11,7 +11,7 @@ import load_bigquery as loadbq
 
 SQL_PAGOS_BD = """SELECT *
                 FROM pagosHistoricosView AS p
-            WHERE date(p.fechaPago) >= adddate(curdate(), interval -7 day)
+            WHERE date(p.fechaPago) >= CURDATE()
             
                 """
                 
