@@ -1,12 +1,17 @@
 import pandas as pd
 import numpy as np
 import sys,os
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
+
 
 
 SQL_PAGOS_BD = """SELECT *

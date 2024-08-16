@@ -3,6 +3,10 @@ import numpy as np
 import sys,os 
 from datetime import datetime,timedelta
 import re
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
