@@ -1,6 +1,10 @@
 import sys,os
 import pandas as pd
 from datetime import datetime,timedelta
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
@@ -142,8 +146,8 @@ SQL_UPDATE_POBLACION = """
                             WHERE cp.nombre_ips != 'COOPSANA IPS') as cp
                     WHERE rp.ips= cp.codigo_ips 
                     AND  date(rp.fecha_capita) =cp.fecha_capita 
-                    AND DATE(rp.fecha_capita) >= date_sub(current_date(), interval 1 MONTH);
-                    AND rp.poblacion_total != cp.poblacion_total
+                    AND DATE(rp.fecha_capita) >= date_sub(current_date(), interval 1 MONTH)
+                    AND rp.poblacion_total != cp.poblacion_total;
                 """
 
 # Parametros bigquery
