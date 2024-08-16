@@ -15,8 +15,8 @@ import load_bigquery as loadbq
 
 
 SQL_PAGOS_BD = """SELECT *
-                FROM pagosHistoricosView AS p
-            WHERE date(p.fechaPago) >= CURDATE()
+                FROM reportes.pagosHistoricosView AS p
+            WHERE date(p.fechaPago) = CURDATE()
             
                 """
                 
