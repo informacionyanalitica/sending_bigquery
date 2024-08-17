@@ -116,7 +116,10 @@ def read_data_bigquery(sql_bigquery,tabla_bigquery):
 def validate_loads_monthly(tabla_bigquery):
     try:
         df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_MONTHLY.format(idBigquery=tabla_bigquery,year=YEAR,mes=MONTH),'reportes')
-        return df_validate_loads
+        if df_validate_loads.totalCargues[0] == 0:
+            return df_validate_loads
+        else:
+            raise ValueError("Ya se realizo el cargue para el día de hoy")
     except ValueError as err:
         print(err)
 
@@ -135,6 +138,9 @@ def validate_loads_daily(tabla_bigquery):
 def validate_loads_weekly(tabla_bigquery):
     try:
         df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_WEEKLY.format(idBigquery=tabla_bigquery),'reportes')
-        return df_validate_loads
+        if df_validate_loads.totalCargues[0] == 0:
+            return df_validate_loads
+        else:
+            raise ValueError("Ya se realizo el cargue para el día de hoy")
     except ValueError as err:
         print(err)
