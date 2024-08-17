@@ -102,7 +102,7 @@ sql_rips_auditoria = """
                             horas_observacion, 
                             fecha_cargue 
                         FROM reportes.rips 
-                        WHERE  date(hora_fecha) BETWEEN '{last_date_load}' AND CURDATE()
+                        WHERE  date(fecha_cargue) = CURDATE()
                         ;
 
                     """
