@@ -125,7 +125,10 @@ def validate_loads_daily(tabla_bigquery):
         df_validate_loads = func_process.load_df_server(SQL_VALIDATE_LOADS_DAILY.format(idBigquery=tabla_bigquery,
                                                                                         date_load=FECHA_CARGUE.date()),
                                                                                         'reportes')
-        return df_validate_loads
+        if df_validate_loads.totalCargues[0] == 0:
+            return df_validate_loads
+        else:
+            raise ValueError("Ya se realizo el cargue para el día de hoy")
     except ValueError as err:
         print(err)
 
