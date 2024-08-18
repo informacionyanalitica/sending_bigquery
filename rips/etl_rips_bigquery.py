@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np 
 import sys,os 
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)

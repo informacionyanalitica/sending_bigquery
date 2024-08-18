@@ -1,6 +1,10 @@
 import sys,os
 import pandas as pd
 from datetime import datetime,timedelta
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
@@ -16,17 +20,20 @@ fecha_capita =f"{today.year}-{today.month}-15"
 project_id_product = 'ia-bigquery-397516'
 dataset_id_rips = 'rips'
 table_name_ciediez = 'rips_ciediez'
+table_name_rips_auditoria = 'rips_auditoria_poblacion_2'
 table_maridb_ciediez = 'rips_cie10'
 
 TABLA_BIGQUERY_CIEDIEZ = f'{project_id_product}.{dataset_id_rips}.{table_name_ciediez}'
+TABLA_BIGQUERY_RIPS = f'{project_id_product}.{dataset_id_rips}.{table_name_rips_auditoria}'
 
 
 SQL_EMPLEADOS = """SELECT identificacion AS identificacion_med, estado_activo FROM empleados_2019"""
+
 SQL_RIPS = f"""SELECT 
                     fecha_capita, identificacion_pac, nombre_ips, sexo, edad_anos, identificacion_med, 
                     nombres_med, dx_principal, nombre_dx_principal, tipos_consulta
-                FROM rips_auditoria_poblacion_2 
-                WHERE (YEAR(fecha_capita) >= 2021) 
+                FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2`
+                WHERE (EXTRACT(DATE FROM fecha_capita) = CURDATE()) 
                     AND (tipos_consulta IN ('CONSULTA MEDICINA GENERAL', 'CONSULTA NO PROGRAMADA'))
                     AND (nombre_ips IN ('NORTE', 'CENTRO', 'AVENIDA ORIENTAL', 'CALASANZ', 'PAC'))
                 ORDER BY fecha_capita;
@@ -36,14 +43,15 @@ SQL_CIEDIEZ = """
                  FROM analitica.cie10
                  """
 
-def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        if  total_cargue == 0:
+        total_rips = df_validate_rips.totalCargues[0]
+        if  total_cargue == 0 and total_rips >0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
-            loadbq.load_data_bigquery(df_load,tabla_bigquery)
+            #loadbq.load_data_bigquery(df_load,tabla_bigquery)
     except ValueError as err:
         print(err)
 
@@ -58,7 +66,8 @@ def convert_columns_date(df):
     return df
 
 # Read data
-rips = func_process.load_df_server(SQL_RIPS, 'analitica')
+#rips = func_process.load_df_server(SQL_RIPS, 'analitica')
+rips = loadbq.read_data_bigquery(SQL_RIPS, TABLA_BIGQUERY_RIPS)
 df_cie10 = func_process.load_df_server(SQL_CIEDIEZ, 'analitica')
 df_empleados = func_process.load_df_server(SQL_EMPLEADOS, 'reportes')
 
@@ -74,9 +83,10 @@ rips_cie10 = rips_cie10[rips_cie10.fecha_capita==fecha_capita]
 rips_cie10 = convert_columns_date(rips_cie10)
 rips_cie10 = convert_columns_number(rips_cie10)
 
+
 # VALIDATE LOAD
 validate_loads_logs_ciediez =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CIEDIEZ)
-
+validate_loads_logs_rips =  loadbq.validate_loads_daily(TABLA_BIGQUERY_RIPS)
 # Load
-validate_load(validate_loads_logs_ciediez,rips_cie10,TABLA_BIGQUERY_CIEDIEZ,table_maridb_ciediez)
+validate_load(validate_loads_logs_ciediez,validate_loads_logs_rips,rips_cie10,TABLA_BIGQUERY_CIEDIEZ,table_maridb_ciediez)
 
