@@ -33,7 +33,7 @@ SQL_RIPS = f"""SELECT
                     fecha_capita, identificacion_pac, nombre_ips, sexo, edad_anos, identificacion_med, 
                     nombres_med, dx_principal, nombre_dx_principal, tipos_consulta
                 FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2`
-                WHERE (EXTRACT(DATE FROM fecha_capita) = CURDATE()) 
+                WHERE (EXTRACT(DATE FROM fecha_capita) = current_date()) 
                     AND (tipos_consulta IN ('CONSULTA MEDICINA GENERAL', 'CONSULTA NO PROGRAMADA'))
                     AND (nombre_ips IN ('NORTE', 'CENTRO', 'AVENIDA ORIENTAL', 'CALASANZ', 'PAC'))
                 ORDER BY fecha_capita;
