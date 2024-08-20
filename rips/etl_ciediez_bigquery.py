@@ -33,7 +33,7 @@ SQL_RIPS = f"""SELECT
                     fecha_capita, identificacion_pac, nombre_ips, sexo, edad_anos, identificacion_med, 
                     nombres_med, dx_principal, nombre_dx_principal, tipos_consulta
                 FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2`
-                WHERE (EXTRACT(DATE FROM fecha_capita) = current_date()) 
+                WHERE (EXTRACT(DATE FROM fecha_cargue) = current_date())
                     AND (tipos_consulta IN ('CONSULTA MEDICINA GENERAL', 'CONSULTA NO PROGRAMADA'))
                     AND (nombre_ips IN ('NORTE', 'CENTRO', 'AVENIDA ORIENTAL', 'CALASANZ', 'PAC'))
                 ORDER BY fecha_capita;
@@ -43,15 +43,14 @@ SQL_CIEDIEZ = """
                  FROM analitica.cie10
                  """
 
-def validate_load(df_validate_load,df_validate_rips,df_load,tabla_bigquery,table_mariadb):
+def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
-        total_rips = df_validate_rips.totalCargues[0]
-        if  total_cargue == 0 and total_rips >0:
+        if  total_cargue == 0:
             # Cargar mariadb
             func_process.save_df_server(df_load, table_mariadb, 'analitica')
             # Cargar bigquery
-            #loadbq.load_data_bigquery(df_load,tabla_bigquery)
+            loadbq.load_data_bigquery(df_load,tabla_bigquery)
     except ValueError as err:
         print(err)
 
@@ -85,8 +84,8 @@ rips_cie10 = convert_columns_number(rips_cie10)
 
 
 # VALIDATE LOAD
-validate_loads_logs_ciediez =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CIEDIEZ)
-validate_loads_logs_rips =  loadbq.validate_loads_daily(TABLA_BIGQUERY_RIPS)
+validate_loads_logs_ciediez =  loadbq.validate_loads_daily(TABLA_BIGQUERY_CIEDIEZ)
+
 # Load
-validate_load(validate_loads_logs_ciediez,validate_loads_logs_rips,rips_cie10,TABLA_BIGQUERY_CIEDIEZ,table_maridb_ciediez)
+validate_load(validate_loads_logs_ciediez,rips_cie10,TABLA_BIGQUERY_CIEDIEZ,table_maridb_ciediez)
 
