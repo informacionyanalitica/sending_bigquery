@@ -10,9 +10,10 @@ path = os.path.abspath(PATH_BIGQUERY)
 sys.path.insert(1,path)
 from cloud_bigquery import CloudBigQuery
 
-FECHA_CARGUE = datetime.now()
+FECHA_CARGUE = datetime.now().replace(microsecond=0)
 YEAR = FECHA_CARGUE.year
 MONTH = FECHA_CARGUE.month
+
 
 SQL_VALIDATE_LOADS_MONTHLY = """ SELECT COUNT(*) AS totalCargues
                         FROM reportes.logsCarguesBigquery AS lg
