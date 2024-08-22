@@ -17,7 +17,9 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 import cumplimientos_pyg as pyg
+import locale
 
+locale.setlocale(locale.LC_TIME, "Spanish_Spain") 
 
 # Execution
 fecha = (datetime.now() - timedelta(days=1))
