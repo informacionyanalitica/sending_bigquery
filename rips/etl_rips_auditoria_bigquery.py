@@ -134,6 +134,7 @@ SQL_BIGQUERY =  """
                 SELECT concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) as column_validator
                     FROM {} as g
                     WHERE date(g.hora_fecha) >= date_sub(current_date() , INTERVAL 1 MONTH)
+                    and concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) IN {}
                      """
 
 SQL_UPDATE_POBLACION = """
