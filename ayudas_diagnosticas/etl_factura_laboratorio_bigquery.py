@@ -150,8 +150,8 @@ def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
 
 # CONVERT STRING
 def convert_column_string(df):
-    # df.ORDEN = df.ORDEN.astype(str)
-    # df.menosCuatroMeses = df.menosCuatroMeses.astype(str)
+    df.ORDEN = df.ORDEN.astype(str)
+    df.menosCuatroMeses = df.menosCuatroMeses.astype(str)
     LIST_COLUMNS_STRING = df.select_dtypes(include=['object']).columns
     for col in LIST_COLUMNS_STRING:
         df[col] = df[col].astype(str)
