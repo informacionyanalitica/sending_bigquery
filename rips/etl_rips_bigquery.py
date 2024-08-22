@@ -15,7 +15,7 @@ import load_bigquery as loadbq
 
 SQL_RIPS_BD = """SELECT *
             FROM reportes.rips AS s
-            WHERE s.fecha_cargue >= adddate(curdate(), interval -7 day)
+            WHERE date(s.fecha_cargue) = CURDATE()
                 """
                 
 SQL_RIPS_BIGQUERY = """
