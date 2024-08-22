@@ -19,7 +19,7 @@ import load_bigquery as loadbq
 import cumplimientos_pyg as pyg
 import locale
 
-locale.setlocale(locale.LC_TIME, "es_ES.UTF-8") 
+locale.setlocale(locale.LC_TIME, "es_ES.utf8") 
 
 # Execution
 fecha = (datetime.now() - timedelta(days=1))
