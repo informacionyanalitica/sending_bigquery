@@ -203,8 +203,8 @@ format_ingreso = "%d/%m/%Y %H:%M:%S"
 format_birth = "%d/%m/%Y"
 
 bd.VALORES = bd.VALORES.astype(float)
-bd['Fecha'] = func_process.pd.to_datetime(bd['Fecha'])
-bd['Fecha Nacimiento'] = func_process.pd.to_datetime(bd['Fecha Nacimiento'])
+bd['Fecha'] = func_process.pd.to_datetime(bd['Fecha'],errors='coerce')
+bd['Fecha Nacimiento'] = func_process.pd.to_datetime(bd['Fecha Nacimiento'], format='%d/%m/%Y',errors='coerce')
 bd[['Historia','CODIGO','ORDEN_SEDE']] = bd[['Historia','CODIGO','ORDEN_SEDE']].astype('str')
 df_autorizaciones[['Historia', 'CODIGO', 'ORDEN_SEDE', 'codigoDiagnostico','numeroidentificacionremitente','nombreremitente']] = df_autorizaciones[['Historia', 'CODIGO', 'ORDEN_SEDE', 'codigoDiagnostico','numeroidentificacionremitente','nombreremitente']].astype(str)
 df_autorizaciones = df_autorizaciones[['Historia', 'CODIGO', 'ORDEN_SEDE', 'codigoDiagnostico','numeroidentificacionremitente','nombreremitente']]
