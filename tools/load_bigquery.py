@@ -72,7 +72,7 @@ def rows_not_duplicates(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
     except ValueError as err:
         print(err)
 
-def rows_duplicates_last_month(df_bd,column,sql_biquery,tabla_bigquery,valores_unicos):
+def rows_duplicates_last_month(df_bd,column,sql_biquery,tabla_bigquery):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     df_save = pd.DataFrame()
     try:
