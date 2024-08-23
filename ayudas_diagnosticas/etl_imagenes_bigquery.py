@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from dotenv import load_dotenv
 
@@ -14,7 +14,7 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-fecha_cargue = datetime.now().date()
+fecha_cargue = (datetime.now() - timedelta(days=1)).date()
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
