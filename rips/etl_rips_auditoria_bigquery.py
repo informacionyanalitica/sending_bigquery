@@ -131,10 +131,9 @@ sql_gestal = """
             """
 
 SQL_BIGQUERY =  """
-                SELECT concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) as column_validator
+                SELECT concat(extract(date from g.hora_fecha),'-',g.orden,'-',g.codigo_sura) as column_validator
                     FROM {} as g
                     WHERE date(g.hora_fecha) >= date_sub(current_date() , INTERVAL 1 MONTH)
-                    and concat(g.hora_fecha,'-',g.orden,'-',g.codigo_sura) IN {}
                      """
 
 SQL_UPDATE_POBLACION = """
@@ -209,9 +208,9 @@ def validate_load(df_validate_load,df_load):
 
 def validate_rows_duplicate(df_rips):
     try:
-        df_rips[VALIDATOR_COLUMN] = df_rips.hora_fecha.astype(str)+'-'+ df_rips.orden.astype(str)+'-'+df_rips.codigo_sura.astype(str) 
+        df_rips[VALIDATOR_COLUMN] = df_rips.hora_fecha.dt.date.astype(str)+'-'+ df_rips.orden.astype(str)+'-'+df_rips.codigo_sura.astype(str)
         valores_unicos = tuple(map(str, df_rips[VALIDATOR_COLUMN]))
-        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df_rips,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos) 
+        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df_rips,VALIDATOR_COLUMN,SQL_BIGQUERY,TABLA_BIGQUERY) 
         df_rips_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
         if df_rips_not_duplicates.shape[0] == 0:
             raise SystemExit
