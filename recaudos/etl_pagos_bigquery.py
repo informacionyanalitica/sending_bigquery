@@ -41,6 +41,6 @@ valores_unicos = tuple(map(str,df_pagos_bd[validator_column]))
 df_pagos_not_duplicates = loadbq.rows_not_duplicates(df_pagos_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
 
 # Save data
-loadbq.load_data_bigquery(df_pagos_not_duplicates,TABLA_BIGQUERY)
+loadbq.load_data_bigquery(df_pagos_bd,TABLA_BIGQUERY)
 
 

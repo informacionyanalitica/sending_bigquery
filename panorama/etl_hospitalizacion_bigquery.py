@@ -1,6 +1,10 @@
 import sys,os
 import pandas as pd
 from datetime import datetime,timedelta
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
@@ -17,7 +21,7 @@ VALIDATOR_COLUMN = 'column_validator'
 
 SQL_URGENCIAS_HOSPITALIZACIONES = """SELECT *
                 FROM reportes.panorama_view AS tc
-                WHERE date(tc.fecha_cargue) > '{last_date}'
+                WHERE date(tc.fecha_cargue) >= '{last_date}'
                 """
 SQL_LAST_DATE_LOAD = """SELECT max(ct.fecha_cargue) AS last_date_load
                         FROM `ia-bigquery-397516.panorama.hospitalizaciones` as ct """

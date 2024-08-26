@@ -42,7 +42,7 @@ SQL_CIEDIEZ = """
                  SELECT *
                  FROM analitica.cie10
                  """
-
+                
 def validate_load(df_validate_load,df_load,tabla_bigquery,table_mariadb):
     try:
         total_cargue = df_validate_load.totalCargues[0]
@@ -63,6 +63,8 @@ def convert_columns_number(df):
 def convert_columns_date(df):
     df.fecha_capita = pd.to_datetime(df.fecha_capita, errors='coerce')
     return df
+
+
 
 # Read data
 #rips = func_process.load_df_server(SQL_RIPS, 'analitica')

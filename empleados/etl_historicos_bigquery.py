@@ -2,6 +2,10 @@ import pandas as pd
 import sys
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Carga el archivo .env
+load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
