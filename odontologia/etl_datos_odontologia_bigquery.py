@@ -15,8 +15,8 @@ import load_bigquery as loadbq
 SQL_ODONTOLOGIA_DATOS_VIEW = """SELECT *
                     FROM reportes.datos_rips_odontologia_view AS r
                     WHERE r.fecha_consulta 
-                        BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL CAST(EXTRACT(DAYOFWEEK FROM CURRENT_DATE()) - 1 AS INT64) DAY
-                        AND DATE_ADD(CURRENT_DATE(), INTERVAL CAST(8 - EXTRACT(DAYOFWEEK FROM CURRENT_DATE()) AS INT64) DAY)
+                        BETWEEN DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
+            AND DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY);
                 """
 
 SQL_BIGQUERY = """
