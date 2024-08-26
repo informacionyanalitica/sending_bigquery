@@ -24,7 +24,7 @@ SQL_LAST_DATE_LOAD = """SELECT max(ct.fecha_cargue) AS last_date_load
 
 
 SQL_BIGQUERY_LAST_MONTH =  """
-                SELECT concat(date(g.Fecha_Egreso_Afiliado),'-',g.Numero_de_documento,'-',ct.consecutivo_evento,) as column_validator
+                SELECT concat(date(g.Fecha_Egreso_Afiliado),'-',g.Numero_de_documento,'-',g.consecutivo_evento) as column_validator
                     FROM {} as g
                     WHERE date(g.fecha_cargue) >= date_sub(current_date() , INTERVAL 1 MONTH)
                      """
@@ -36,7 +36,7 @@ def validate_rows_duplicate(df):
     try:
         df[VALIDATOR_COLUMN] = df.Fecha_Egreso_Afiliado.astype(str)+'-'+ df.Numero_de_documento.astype(str)+'-'+df.consecutivo_evento.astype(str) 
         valores_unicos = tuple(map(str, df[VALIDATOR_COLUMN]))
-        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df,VALIDATOR_COLUMN,SQL_BIGQUERY_LAST_MONTH,TABLA_BIGQUERY,valores_unicos) 
+        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df,VALIDATOR_COLUMN,SQL_BIGQUERY_LAST_MONTH,TABLA_BIGQUERY) 
         df_rips_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
         if df_rips_not_duplicates.shape[0] == 0:
             raise SystemExit
@@ -70,6 +70,16 @@ def convert_column_date(df):
     except Exception as err:
         print(err)
 
+def convert_column_string(df):
+    try:
+        COLUMNS_NOT_STRING = LIST_COLUMNS_INT + LIST_COLUMNS_DATE
+        for col in df.columns:
+            if col not in COLUMNS_NOT_STRING:
+                df[col] = df[col].astype(str)
+        return df
+    except Exception as err:
+        print(err)
+
 def read_date():
     try:
         last_date_load = loadbq.read_data_bigquery(SQL_LAST_DATE_LOAD,TABLA_BIGQUERY)['last_date_load'][0]
@@ -83,9 +93,11 @@ def read_date():
 # READ DATA
 df_hospitalizacion_panorama=read_date()
 df_hospitalizacion_panorama = convert_column_date(df_hospitalizacion_panorama)
-# VALIDATE LOGS LOAD
+df_hospitalizacion_panorama = convert_column_int(df_hospitalizacion_panorama)
+df_hospitalizacion_panorama = convert_column_string(df_hospitalizacion_panorama)
+#  VALIDATE LOGS LOAD
 validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
-# VALIDATE ROWS DUPLICATE
+#  VALIDATE ROWS DUPLICATE
 df_hospitalizacion_not_duplicates = validate_rows_duplicate(df_hospitalizacion_panorama)
 #  Load data to server
 validate_load(validate_loads_logs,df_hospitalizacion_not_duplicates)
