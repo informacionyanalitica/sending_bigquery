@@ -70,6 +70,15 @@ def read_dataset():
     except Exception as err:
         print(err)
 
+def get_id_folder():
+    try:
+        # GET ID FOLDER
+        id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
+        url_drive = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
+        return url_drive
+    except Exception as err:
+        print(err)
+        
 def validate_folder():
     try:
         pattern = os.path.join(PATH_FILE_SAVE)
@@ -81,14 +90,7 @@ def validate_folder():
     except Exception as err:
         print(err)
 
-def get_id_folder():
-    try:
-        # GET ID FOLDER
-        id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
-        url_drive = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
-        return url_drive
-    except Exception as err:
-        print(err)
+
 
 def validate_save_file(df_gestion_medica):
     try:
