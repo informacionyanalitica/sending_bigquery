@@ -74,11 +74,11 @@ def validate_save_file(df_gestion_medica):
     try:
         pattern = os.path.join(PATH_FILE_SAVE)
         folder_exists = glob.glob(pattern)
-        pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
-        files_exists = glob.glob(pattern_files)
         if not folder_exists:
             os.mkdir(PATH_FILE_SAVE)
         df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
+        pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
+        files_exists = glob.glob(pattern_files)
         if not files_exists:
             raise ValueError(f"No se encontraron archivos con el patrón: {pattern_files}")
         else:
