@@ -70,22 +70,36 @@ def read_dataset():
     except Exception as err:
         print(err)
 
-def validate_save_file(df_gestion_medica):
+def validate_folder():
     try:
         pattern = os.path.join(PATH_FILE_SAVE)
         folder_exists = glob.glob(pattern)
         if not folder_exists:
             os.mkdir(PATH_FILE_SAVE)
+        url_drive = get_id_folder()
+        return url_drive
+    except Exception as err:
+        print(err)
+
+def get_id_folder():
+    try:
+        # GET ID FOLDER
+        id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
+        url_drive = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
+        return url_drive
+    except Exception as err:
+        print(err)
+
+def validate_save_file(df_gestion_medica):
+    try:
+        url_drive = validate_folder()
         df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
         files_exists = glob.glob(pattern_files)
         if not files_exists:
             raise ValueError(f"No se encontraron archivos con el patrón: {pattern_files}")
         else:
-            # GET ID FOLDER
-            id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
-            URL_DRIVE = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
-            print(URL_DRIVE)       
+            print(url_drive)
     except Exception as err:
         print(err)
    
