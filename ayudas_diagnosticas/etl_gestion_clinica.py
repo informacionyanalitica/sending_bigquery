@@ -74,7 +74,8 @@ def get_id_folder():
     try:
         # GET ID FOLDER
         id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
-        url_drive = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
+        id_folder_month = id_folder[id_folder.name == MONTH_NAME]
+        url_drive = f'https://drive.google.com/drive/u/0/folders/{id_folder_month.id.values[0]}'
         return url_drive
     except Exception as err:
         print(err)
