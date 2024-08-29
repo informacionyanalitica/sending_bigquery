@@ -18,12 +18,11 @@ import load_bigquery as loadbq
 import extract_file_gdrive as filesGD
 
 # LOCALE
-#locale.setlocale(locale.LC_TIME, "es_ES.utf8")  
+locale.setlocale(locale.LC_TIME, "es_ES.utf8")  
 
 date_load = (datetime.now() - timedelta(days=1))
 date_execution = date_load.date()
-#MONTH_NAME = date_load.strftime('%B').capitalize()
-MONTH_NAME = 'Agosto'
+MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
 PATH_FILE_SAVE = f'{PATH_DRIVE}/Gestión Clínica/{MONTH_NAME}/'
 NAME_FILE = str(date_execution)+'.xlsx'
@@ -46,9 +45,8 @@ TABLA_BIGQUERY_LABORATORIO_VIEW = f'{project_id_product}.{dataset_ayudas_diagnos
 # SQL
 SQL_PERFILES_LABORATORIO =  f"""
                 SELECT sl._order,sl.name,sl.result,sl.refmin,sl.refmax,sl.pathology,sl.fechaValidacion,
-                r.patientId,r.entryDate,r.autorizacionSura,r.name as nombre_paciente,r.lastName as apellido_paciente
-                FROM resultados_laboratorio.sueltos AS sl
-                JOIN resultados_laboratorio.results AS r ON r._order = sl._order
+                sl.patientId,sl.entryDate,sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
+                FROM reportes.perfilesExamenesView AS sl
                 WHERE sl.pathology = 'true'
                 and DATE(sl.fechaValidacion) = DATE_SUB('{date_execution}', INTERVAL 1 DAY)
                 AND sl.result != 'MEMO' 
@@ -76,13 +74,18 @@ def validate_save_file(df_gestion_medica):
     try:
         pattern = os.path.join(PATH_FILE_SAVE)
         folder_exists = glob.glob(pattern)
+        pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
+        files_exists = glob.glob(pattern_files)
         if not folder_exists:
             os.mkdir(PATH_FILE_SAVE)
         df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
-        # GET ID FOLDER
-        id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
-        URL_DRIVE = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
-        print(URL_DRIVE)       
+        if not files_exists:
+            raise ValueError(f"No se encontraron archivos con el patrón: {pattern_files}")
+        else:
+            # GET ID FOLDER
+            id_folder = filesGD.getIdsGoogleSheet(PATH_GESTION_CLINICA)
+            URL_DRIVE = f'https://drive.google.com/drive/u/0/folders/{id_folder.id.values[0]}'
+            print(URL_DRIVE)       
     except Exception as err:
         print(err)
    
@@ -96,15 +99,6 @@ def get_merge(df_perfiles,df_laboratorio_sin_duplicados):
     except Exception as err:
         print(err)
 
-# def save_file(df_gestion_medica):
-#     try:
-        
-        
-#         validate_file()
-        
-#         print
-#     except Exception as err:
-#         print(err)
 
 df_laboratorio_sin_duplicados,df_perfiles = read_dataset()
 df_gestion_medica = get_merge(df_perfiles,df_laboratorio_sin_duplicados)
