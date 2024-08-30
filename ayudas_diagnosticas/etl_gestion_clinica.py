@@ -25,7 +25,7 @@ date_load = (datetime.now() - timedelta(days=1))
 date_execution = date_load.date()
 MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
-PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/{MONTH_NAME}/'
+PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
 NAME_FILE = str(date_execution)+'.xlsx'
 
 
