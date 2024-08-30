@@ -90,6 +90,8 @@ def validate_save_file(df_gestion_medica):
         files_exists = glob.glob(pattern_files)
         if not files_exists:
             raise ValueError(f"No se encontraron archivos con el patrón: {pattern_files}")
+        else:
+            print(MONTH_NAME)
     except Exception as err:
         print(err)
    
