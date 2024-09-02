@@ -37,7 +37,7 @@ def validate_rows_duplicate(df):
     try:
         df[VALIDATOR_COLUMN] = df.Fecha_Autorizacion.astype(str)+'-'+ df.Numero_de_documento.astype(str)+'-'+df.Codigo_Diagnostico_EPS_Op.astype(str) 
         valores_unicos = tuple(map(str, df[VALIDATOR_COLUMN]))
-        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df,VALIDATOR_COLUMN,SQL_BIGQUERY_LAST_MONTH,TABLA_BIGQUERY,valores_unicos) 
+        df_rips_not_duplicates = loadbq.rows_duplicates_last_month(df,VALIDATOR_COLUMN,SQL_BIGQUERY_LAST_MONTH,TABLA_BIGQUERY) 
         df_rips_not_duplicates.drop(VALIDATOR_COLUMN, axis=1, inplace=True)
         if df_rips_not_duplicates.shape[0] == 0:
             raise SystemExit
