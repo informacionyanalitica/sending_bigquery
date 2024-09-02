@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import locale
 
@@ -12,9 +12,9 @@ import func_process
 import load_bigquery as loadbq
 
 # Configurar el locale a español 
-#locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
-fecha_capita = pd.to_datetime(datetime.now().date())
+fecha_capita = pd.to_datetime(datetime.now() - timedelta(days=15))
 fecha = func_process.pd.to_datetime(str(fecha_capita.year)+'-'+str(fecha_capita.month)+'-01')
 fecha_cargue = func_process.pd.to_datetime(str(fecha_capita.year)+'-'+str(fecha_capita.month)+'-15')
 mes = fecha.strftime('%B').lower()
@@ -63,8 +63,8 @@ TABLA_BIGQUERY_CAPITA_POBLACIONES = f'{project_id_product}.{dataset_id_pacientes
 LIST_TABLA_BIGQUERY = [TABLA_BIGQUERY_DIABETICOS_HIPERTENSOS,TABLA_BIGQUERY_DIABETICOS_HIPERTENSOS_TOTALES,
                        TABLA_BIGQUERY_DM_ALL,TABLA_BIGQUERY_COBERTURA_DM_TOTALES,TABLA_BIGQUERY_COBERTURA_HTA,
                        TABLA_BIGQUERY_COBERTURA_HTA_TOTALES,TABLA_BIGQUERY_DIABETICOS_FU]
-LIST_TABLA_MARIADB = ['diabeticos_hipertensos_bk','diabeticos_hipertensos_totales_bk','dm_all_bk',
-                      'cobertura_dm_totales_bk','cobertura_hta_bk','cobertura_hta_totales_bk','diabeticos_fu_bk']
+LIST_TABLA_MARIADB = ['diabeticos_hipertensos','diabeticos_hipertensos_totales','dm_all',
+                      'cobertura_dm_totales','cobertura_hta','cobertura_hta_totales','diabeticos_fu']
 LIST_COLUMN_VALIDATOR = ['fecha_capita'] * len(LIST_TABLA_BIGQUERY)
 LIST_IF_EXIST_BIGQUERY = ['WRITE_TRUNCATE','WRITE_APPEND','WRITE_TRUNCATE','WRITE_APPEND','WRITE_TRUNCATE','WRITE_APPEND','WRITE_APPEND']
 LIST_IF_EXIST_MARIADB = ['replace','append','replace','append','replace','append','append']
@@ -577,7 +577,7 @@ df_diabeticos_hipertensos_totales_p = df_diabeticos_hipertensos_totales.merge(df
 df_diabeticos_hipertensos_totales_p.drop(columns='FECHA_CAPITA', inplace=True)
 df_diabeticos_hipertensos_totales_p['fecha_capita'] = df_diabeticos_hipertensos_totales_p['fecha_capita'].astype('str')
 df_diabeticos_hipertensos_totales_p.rename({'MAYORES_DE_18_ANOS':'mayores_18_anos'}, axis=1, inplace=True)
-df_diabeticos_hipertensos_totales_p['fecha_capita'] = '2022-12-15'
+df_diabeticos_hipertensos_totales_p['fecha_capita'] = fecha_cargue
 
 # Sacamos un atabla RIPS con los registros de diabeticos de los ultimos 7 meses.
 rips_diabetes_seven_months = df_rips_diabeticos[(df_rips_diabeticos.hora_fecha > pd.to_datetime(fecha_seven)) &
@@ -714,7 +714,7 @@ df_rips_hta_seven_months = df_rips_hta[(df_rips_hta.hora_fecha > fecha_seven) & 
 
 df_hta = df_hipertensos
 df_hta.sede_atencion = df_hta.sede_atencion.astype('str')
-df_hta.insert(0, 'fecha_capita', fecha_capita)
+df_hta.insert(0, 'fecha_capita', fecha_cargue)
 df_hta.insert(10, 'nombre_sede_atencion', df_hta["sede_atencion"].map(n_ips))
 df_hta.insert(12, 'cobertura_hta', df_hta['identificacion_paciente'].mask(df_hta['identificacion_paciente'].isin(df_rips_hta_seven_months['identificacion_pac']), other= 1))
 df_hta.cobertura_hta.mask(df_hta.cobertura_hta != 1, other= 0, inplace = True)
@@ -828,7 +828,6 @@ detalle_df_save = pd.DataFrame({
 
 # Save data Hb1Ac_70
 df_Hb1Ac_last_date_70_no_telemedicina_no_presenciales.to_excel(f"Hb1Ac_70_{mes}.xlsx", index=False)
-
 execution_load(detalle_df_save)
 
 
