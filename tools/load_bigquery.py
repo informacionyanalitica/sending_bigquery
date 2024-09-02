@@ -105,6 +105,13 @@ def update_data_bigquery(sql_update,tabla_bigquery):
     except Exception as err:
         print(err)
 
+def delete_table_bigquery(tabla_bigquery):
+    bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
+    try:
+        bq_cloud.delete_table()
+    except Exception as err:
+        print(err)
+
 def read_data_bigquery(sql_bigquery,tabla_bigquery):
     bq_cloud = instanciar_cloud_bigquery(tabla_bigquery)
     df_read = pd.DataFrame()
@@ -145,3 +152,4 @@ def validate_loads_weekly(tabla_bigquery):
             raise ValueError("Ya se realizo el cargue para el día de hoy")
     except ValueError as err:
         print(err)
+
