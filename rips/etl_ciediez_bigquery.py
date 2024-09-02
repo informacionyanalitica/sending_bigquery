@@ -13,8 +13,9 @@ import func_process
 import load_bigquery as loadbq
 
 # Fechas
-today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
+today =  datetime.now().date()
 fecha_capita =f"{today.year}-{today.month}-15"
+fecha_capita_dia_anterior = (today-timedelta(days=1)).strftime('%Y-%m-15')
 
 # Parametros bigquery
 project_id_product = 'ia-bigquery-397516'
@@ -33,7 +34,7 @@ SQL_RIPS = f"""SELECT
                     fecha_capita, identificacion_pac, nombre_ips, sexo, edad_anos, identificacion_med, 
                     nombres_med, dx_principal, nombre_dx_principal, tipos_consulta
                 FROM `ia-bigquery-397516.rips.rips_auditoria_poblacion_2`
-                WHERE (EXTRACT(DATE FROM fecha_cargue) = current_date())
+                WHERE (EXTRACT(DATE FROM fecha_cargue) = '{today}')
                     AND (tipos_consulta IN ('CONSULTA MEDICINA GENERAL', 'CONSULTA NO PROGRAMADA'))
                     AND (nombre_ips IN ('NORTE', 'CENTRO', 'AVENIDA ORIENTAL', 'CALASANZ', 'PAC'))
                 ORDER BY fecha_capita;
@@ -80,7 +81,7 @@ rips_cie10 = rips.merge(df_empleados,
                                           left_on='dx_principal', 
                                           right_on='cod_4', 
                                           how='left')
-rips_cie10 = rips_cie10[rips_cie10.fecha_capita==fecha_capita]
+rips_cie10 = rips_cie10[rips_cie10.fecha_capita==fecha_capita_dia_anterior]
 rips_cie10 = convert_columns_date(rips_cie10)
 rips_cie10 = convert_columns_number(rips_cie10)
 

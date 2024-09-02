@@ -15,20 +15,14 @@ import load_bigquery as loadbq
 
 
 # GENERAMOS UNA FECHA PARA QUE EL INFORME TOME LOS DATOS DEL MES A PROCESAR
-#today = func_process.pd.to_datetime(datetime.now() - timedelta(days=15))
 today = datetime.now()
 fecha_capita = func_process.pd.to_datetime(today.strftime('%Y-%m-15'))
-#fecha_capita = func_process.pd.to_datetime(input('Escriba la fecha de la capita del mes a cargar, AAAA-MM-DD: '))
-
+fecha_capita_dia_anterior = (today - timedelta(days=1)).strftime('%Y-%m-15')
+FECHA = fecha_capita.strftime("%Y-%m-%d")
 year = str(fecha_capita.year)
 mes_letra = fecha_capita.strftime('%B').upper()
 mes_numero = fecha_capita.strftime('%m')
-#last_day = str(fecha_capita.days_in_month)
 
-#fecha_i = f"{year}-{mes_numero}-01 00:00:00"
-#fecha_f = f"{year}-{mes_numero}-{last_day} 23:59:59"
-
-FECHA = fecha_capita.strftime("%Y-%m-%d")
 # Diccionario para mapear los nombres de las sedes por medio del codigo (como texto)
 n_ips = {
     '35':'CENTRO',
@@ -275,7 +269,7 @@ df_rips_auditoria['ips'] = df_rips_auditoria['ips'].astype('str')
 df_rips_auditoria.insert(0, 'FECHA_CAPITA', df_rips_auditoria['hora_fecha'].apply(lambda row: '{}{}{:02d}{}{}'.format(row.year, '-', row.month, '-', 15)))
 df_rips_auditoria.insert(1, 'NOMBRE_IPS', df_rips_auditoria['ips'].map(n_ips))
 df_rips_auditoria['FECHA_CAPITA'] = func_process.pd.to_datetime(df_rips_auditoria['FECHA_CAPITA'])
-df_rips_auditoria_mes = df_rips_auditoria[df_rips_auditoria['FECHA_CAPITA'] == fecha_capita.strftime('%Y-%m-%d')]
+df_rips_auditoria_mes = df_rips_auditoria[df_rips_auditoria['FECHA_CAPITA'] == fecha_capita_dia_anterior]
 df_rips_auditoria_mes_p = df_rips_auditoria_mes.merge(df_capita_poblaciones_all, 
                                                         how='left',
                                                         on=['FECHA_CAPITA','NOMBRE_IPS'])
