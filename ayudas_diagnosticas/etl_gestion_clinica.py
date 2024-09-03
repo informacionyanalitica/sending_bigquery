@@ -26,7 +26,7 @@ date_execution = date_load.date()
 MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
 PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
-NAME_FILE = str(date_execution)+'.xlsx'
+NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 
 
 
@@ -45,13 +45,14 @@ TABLA_BIGQUERY_LABORATORIO_VIEW = f'{project_id_product}.{dataset_ayudas_diagnos
 
 # SQL
 SQL_PERFILES_LABORATORIO =  f"""
-                SELECT sl._order,sl.name,sl.result,sl.refmin,sl.refmax,sl.pathology,sl.fechaValidacion,
-                sl.patientId,sl.entryDate,sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
-                FROM reportes.perfilesExamenesView AS sl
-                WHERE sl.pathology = 'true'
-                and DATE(sl.fechaValidacion) = '{date_execution}'
-                AND sl.result != 'MEMO' 
-                AND sl.refmin != 'undefined'
+                SELECT sl._order,sl.name,sl.resultSueltos AS result,sl.refminSueltos AS refmin,sl.refmaxSueltos AS refmax,
+                sl.pathologySueltos AS pathology,sl.fechaValidacionSueltos AS fechaValidacion,sl.patientId,sl.entryDate,
+                sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
+                FROM reportes.examenesLaboratorioView AS sl
+                WHERE sl.pathologySueltos = 'true'
+                and DATE(sl.fechaValidacionSueltos) = '{date_execution}'
+                AND sl.resultSueltos != 'MEMO' 
+                AND sl.refminSueltos != 'undefined';
                 """
 SQL_LABORATORIO = f"""SELECT distinct lb.ORDEN_SEDE,lb.HISTORIA,lb.NOMBRE,lb.C_MEDICO,lb.MEDICO,lb.cargo_gestal,lb.SEDE_MEDICO,
                         cp.celular,UPPER(cp.email) AS email,ea.email as email_medico
