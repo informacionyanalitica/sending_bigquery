@@ -85,7 +85,8 @@ def validate_folder():
 def validate_save_file(df_gestion_medica):
     try:
         validate_folder()
-        df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
+        if df_gestion_medica.shape[0] >0:
+            df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
         files_exists = glob.glob(pattern_files)
         if not files_exists:
