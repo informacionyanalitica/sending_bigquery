@@ -49,7 +49,7 @@ SQL_PERFILES_LABORATORIO =  f"""
                 sl.patientId,sl.entryDate,sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
                 FROM reportes.perfilesExamenesView AS sl
                 WHERE sl.pathology = 'true'
-                and DATE(sl.fechaValidacion) = DATE_SUB('{date_execution}', INTERVAL 1 DAY)
+                and DATE(sl.fechaValidacion) = '{date_execution}'
                 AND sl.result != 'MEMO' 
                 AND sl.refmin != 'undefined'
                 """
