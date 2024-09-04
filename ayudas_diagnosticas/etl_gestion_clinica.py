@@ -32,8 +32,8 @@ NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 
 
 RENAME_COLUMN_REQUIRED = ['identificacion_paciente','nombre_paciente','apellido_paciente','celular','email','orden_cltech','nombre_prueba','resultado',
-                          'refmin','refmax','fecha_validacion','fecha_ingreso','orden_sura','identificacion_medico',
-                          'nombre_medico','cargo_medico','sede_medico','email_medico'
+                          'refmin','refmax','fecha_validacion','fecha_ingreso','orden_sura','identificacion_profesional',
+                          'nombre_profesional','cargo_profesional','sede_profesional','email_profesional'
                           ]
 COLUMNS_REQUIRED = ['HISTORIA','nombre_paciente','apellido_paciente','celular','email','_order', 'nombre_prueba', 'result', 'refmin', 'refmax','fechaValidacion',
                         'entryDate', 'autorizacionSura','C_MEDICO', 'MEDICO', 'cargo_gestal', 'SEDE_MEDICO','email_medico']
