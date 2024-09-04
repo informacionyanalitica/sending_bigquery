@@ -35,7 +35,7 @@ RENAME_COLUMN_REQUIRED = ['identificacion_paciente','nombre_paciente','apellido_
                           'refmin','refmax','fecha_validacion','fecha_ingreso','orden_sura','identificacion_medico',
                           'nombre_medico','cargo_medico','sede_medico','email_medico'
                           ]
-COLUMNS_REQUIRED = ['HISTORIA','nombre_paciente','apellido_paciente','celular','email','_order', 'name', 'result', 'refmin', 'refmax','fechaValidacion',
+COLUMNS_REQUIRED = ['HISTORIA','nombre_paciente','apellido_paciente','celular','email','_order', 'nombre_prueba', 'result', 'refmin', 'refmax','fechaValidacion',
                         'entryDate', 'autorizacionSura','C_MEDICO', 'MEDICO', 'cargo_gestal', 'SEDE_MEDICO','email_medico']
 
 # BIGQUERY
@@ -46,7 +46,7 @@ TABLA_BIGQUERY_LABORATORIO_VIEW = f'{project_id_product}.{dataset_ayudas_diagnos
 
 # SQL
 SQL_PERFILES_LABORATORIO =  f"""
-                SELECT sl._order,sl.name,sl.resultSueltos AS result,sl.refminSueltos AS refmin,sl.refmaxSueltos AS refmax,
+                SELECT sl._order,sl.nameSueltos AS nombre_prueba,sl.resultSueltos AS result,sl.refminSueltos AS refmin,sl.refmaxSueltos AS refmax,
                 sl.pathologySueltos AS pathology,sl.fechaValidacionSueltos AS fechaValidacion,sl.patientId,sl.entryDate,
                 sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
                 FROM reportes.examenesLaboratorioView AS sl
