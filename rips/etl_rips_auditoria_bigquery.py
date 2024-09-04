@@ -227,8 +227,7 @@ def get_capitas_poblaciones():
         df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones.format(fecha_capita=FECHA),TABLA_BIGQUERY_PACIENTES)   
         if df_capita_poblaciones.shape[0]== 0:
             fecha_capita_anterior = func_process.pd.to_datetime((pd.to_datetime(FECHA) - timedelta(days=20))).strftime('%Y-%m-15')
-            df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones.format(fecha_capita=fecha_capita_anterior),TABLA_BIGQUERY_PACIENTES)   
-            df_capita_poblaciones['POBLACION_TOTAL'] = 0
+            df_capita_poblaciones = loadbq.read_data_bigquery(sql_capita_poblaciones.format(fecha_capita=fecha_capita_anterior),TABLA_BIGQUERY_PACIENTES)
             df_capita_poblaciones['FECHA_CAPITA'] = FECHA
         return df_capita_poblaciones
     except Exception as err:
@@ -339,6 +338,6 @@ validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY)
 # VALIDATE ROWS DUPLICATE
 df_rips_not_duplicates = validate_rows_duplicate(df_rips_auditoria_mes_p_sede_gestal)
 
-# # Load data to server
+# Load data to server
 validate_load(validate_loads_logs,df_rips_not_duplicates)
 
