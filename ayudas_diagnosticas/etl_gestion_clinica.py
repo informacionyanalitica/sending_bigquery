@@ -11,6 +11,7 @@ load_dotenv()
 
 PATH_DRIVE = os.environ.get("PATH_DRIVE")
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
+print(PATH_TOOLS)
 PATH_ETL = os.environ.get("PATH_ETL")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
