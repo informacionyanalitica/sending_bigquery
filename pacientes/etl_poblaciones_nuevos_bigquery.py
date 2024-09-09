@@ -387,7 +387,6 @@ CAPITA_POBLACIONES.rename({'menores_de_16_anos':'menores_a_16_anos'}, axis=1,inp
 # ELGIR EL ORDEN DE LAS COLUMNAS REQUERIDAS
 CAPITA_POBLACIONES = CAPITA_POBLACIONES[COLUMNS_REQUIRED]
 
-print(CAPITA_POBLACIONES.shape)
 # Cargar a bigquery
-# validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES_NUEVOS)
-# validate_load(validate_loads_logs,CAPITA_POBLACIONES)
+validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES_NUEVOS)
+validate_load(validate_loads_logs,CAPITA_POBLACIONES)
