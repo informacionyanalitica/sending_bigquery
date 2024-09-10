@@ -20,14 +20,15 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-#today = datetime.now()
-today = pd.to_datetime('2024-08-15')
-start_date = '2024-08-13'
-end_date = '2024-08-14'
-# start_date = datetime.now().date()
-# end_date = (start_date+timedelta(days=1))
+os.environ['LANG'] = 'es_ES.UTF-8'
+os.environ['LC_ALL'] = 'es_ES.UTF-8'
+locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
+print(f"Locale configurado: {locale.getlocale()}")
+
+today = datetime.now()
+end_date = today.date()
+start_date = (end_date-timedelta(days=1))
 month_name = today.strftime('%B')
-#month_name = 'agosto'
 year_capita = today.strftime('%Y')
 month_number = today.strftime('%m')
 name_subject = f'Fwd: Capitación {month_name} {year_capita}'
@@ -36,7 +37,7 @@ path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capital
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
 
-print("Nombre mes: ",month_name)
+
 # Diccionario con parametros vacios para completar en el flujo
 parameters_email_capita = {
             "name_subject":name_subject,
@@ -47,6 +48,8 @@ parameters_download_attachment =  {
     "id_message":'',
     "name_attachment":NAME_ATTACHMENT
         }
+
+
 
 def get_message_email(start_date,end_date):
     try:
@@ -127,7 +130,6 @@ def send_id_attachment(parameters_download_attachment,path_download_capita,list_
             print(err)
 
 def check_email_capita():
-    func_process.configure_locale()
     message_email_result = get_message_email(start_date,end_date)
     list_id_email = get_id_message_capita(parameters_email_capita,message_email_result)
     path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
