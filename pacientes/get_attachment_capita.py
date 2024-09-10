@@ -19,7 +19,9 @@ path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
-locale.setlocale(locale.LC_TIME, "es_ES.utf8") 
+
+locale.setlocale(locale.LC_ALL, 'es_ES.utf8')
+
 
 #today = datetime.now()
 today = pd.to_datetime('2024-08-15')
