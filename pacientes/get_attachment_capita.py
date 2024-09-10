@@ -28,6 +28,7 @@ print(f"Locale configurado: {locale.getlocale()}")
 today = datetime.now()
 end_date = today.date()
 start_date = (end_date-timedelta(days=1))
+fecha_capita =today.strftime('%Y-%m-15')
 month_name = today.strftime('%B')
 year_capita = today.strftime('%Y')
 month_number = today.strftime('%m')
@@ -37,6 +38,19 @@ path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capital
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
 
+# Bigquery
+project_id_product = 'ia-bigquery-397516'
+
+# DATASET AYUDAS DIAGNOSTICAS
+dataset_id_pacientes = 'pacientes'
+# TABLAS
+table_name_capita_poblaciones = 'capitas_poblaciones'
+TABLA_BIGQUERY_CAPITA_POBLACIONES = f'{project_id_product}.{dataset_id_pacientes}.{table_name_capita_poblaciones}'
+
+# SQL
+SQL_CAPITA_POBLACIONES = f"""SELECT COUNT(*) as total_registros
+                    FROM `ia-bigquery-397516.pacientes.capitas_poblaciones` as cp
+                    where date(cp.fecha_capita) = '{fecha_capita}'"""
 
 # Diccionario con parametros vacios para completar en el flujo
 parameters_email_capita = {
@@ -49,6 +63,13 @@ parameters_download_attachment =  {
     "name_attachment":NAME_ATTACHMENT
         }
 
+def validate_load_capita():
+    try:
+        df_capita_poblaciones = loadbq.read_data_bigquery(SQL_CAPITA_POBLACIONES, TABLA_BIGQUERY_CAPITA_POBLACIONES)
+        total_registros = df_capita_poblaciones.total_registros[0]
+        return total_registros            
+    except Exception as err:
+        print(err)
 
 
 def get_message_email(start_date,end_date):
@@ -130,11 +151,19 @@ def send_id_attachment(parameters_download_attachment,path_download_capita,list_
             print(err)
 
 def check_email_capita():
-    message_email_result = get_message_email(start_date,end_date)
-    list_id_email = get_id_message_capita(parameters_email_capita,message_email_result)
-    path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
-    exists_email = send_id_attachment(parameters_download_attachment,path_download_validated,list_id_email,path_download_api)
-    return exists_email
+    exists_email = None
+    try:
+        total_registros = validate_load_capita()
+        if total_registros==0:
+            message_email_result = get_message_email(start_date,end_date)
+            list_id_email = get_id_message_capita(parameters_email_capita,message_email_result)
+            path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
+            exists_email = send_id_attachment(parameters_download_attachment,path_download_validated,list_id_email,path_download_api)
+        return exists_email
+    except Exception as err:
+        print(err)
+   
+
 
 
 
