@@ -20,9 +20,6 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-locale.setlocale(locale.LC_ALL, 'es_ES.utf8')
-
-
 #today = datetime.now()
 today = pd.to_datetime('2024-08-15')
 start_date = '2024-08-13'
@@ -30,6 +27,7 @@ end_date = '2024-08-14'
 # start_date = datetime.now().date()
 # end_date = (start_date+timedelta(days=1))
 month_name = today.strftime('%B')
+#month_name = 'agosto'
 year_capita = today.strftime('%Y')
 month_number = today.strftime('%m')
 name_subject = f'Fwd: Capitación {month_name} {year_capita}'
@@ -38,7 +36,7 @@ path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capital
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
 
-
+print("Nombre mes: ",month_name)
 # Diccionario con parametros vacios para completar en el flujo
 parameters_email_capita = {
             "name_subject":name_subject,
@@ -52,7 +50,7 @@ parameters_download_attachment =  {
 
 def get_message_email(start_date,end_date):
     try:
-        response = requests.get(f'http://192.168.1.89:5000/email/range-date?start_date={start_date}&end_date={end_date}')
+        response = requests.get(f'http://10.142.0.4:5000/email/range-date?start_date={start_date}&end_date={end_date}')
         message_email= response.json()  
         return message_email['results']
     except ValueError as err:
@@ -62,7 +60,7 @@ def get_message_email(start_date,end_date):
 def get_id_message_capita(parameters_email_capita,message_email):
     try:
         parameters_email_capita['message'] = message_email
-        response = requests.post(f'http://192.168.1.89:5000/email/capita',json=parameters_email_capita)
+        response = requests.post(f'http://10.142.0.4:5000/email/capita',json=parameters_email_capita)
         list_id_message = response.json()
         return list_id_message['result']
     except ValueError as err:
@@ -71,7 +69,7 @@ def get_id_message_capita(parameters_email_capita,message_email):
 
 def download_attachment(parameters_download_attachment):
     try:
-        response = requests.post(f'http://192.168.1.89:5000/email/download_attachment',json=parameters_download_attachment)
+        response = requests.post(f'http://10.142.0.4:5000/email/download_attachment',json=parameters_download_attachment)
         path_file = response.json()
         return path_file['result']
     except ValueError as err:
@@ -129,9 +127,12 @@ def send_id_attachment(parameters_download_attachment,path_download_capita,list_
             print(err)
 
 def check_email_capita():
+    func_process.configure_locale()
     message_email_result = get_message_email(start_date,end_date)
     list_id_email = get_id_message_capita(parameters_email_capita,message_email_result)
     path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
     exists_email = send_id_attachment(parameters_download_attachment,path_download_validated,list_id_email,path_download_api)
     return exists_email
+
+
 
