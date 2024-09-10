@@ -16,6 +16,7 @@ import requests
 import time
 from datetime import date, timedelta, datetime
 import os
+import locale
 
 # Nombre del mes en español
 #import locale
@@ -198,3 +199,14 @@ def format_roles_sedes(df, rol):
     df.drop('Observaciones', axis=1, inplace=True)
     df['Identificacion'] = df['Identificacion'].astype('str')
     return df
+
+def configure_locale():
+    try:
+        os.environ['LANG'] = 'es_ES.UTF-8'
+        os.environ['LC_ALL'] = 'es_ES.UTF-8'
+        locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
+        print(f"Locale configurado: {locale.getlocale()}")
+    except locale.Error:
+        print("No se pudo configurar el locale. Usando el valor predeterminado.")
+        locale.setlocale(locale.LC_ALL, '')  
+        print(f"Locale predeterminado: {locale.getlocale()}")
