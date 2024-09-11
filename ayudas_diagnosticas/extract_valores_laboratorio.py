@@ -40,7 +40,7 @@ SQL_LABORATORIO_LAST_WEEK = f"""SELECT *
 def save_file(df_estadisticas):
     try:
         if df_estadisticas.shape[0]>0:
-            df_estadisticas.to_csv(PATH_SAVE_FILE)
+            df_estadisticas.to_csv(PATH_SAVE_FILE,index=False)
             return print(date_initial,',',date_final)
         else:
             raise ValueError(f"El archivo no contiene datos")
