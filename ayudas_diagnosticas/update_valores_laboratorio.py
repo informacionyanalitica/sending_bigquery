@@ -37,7 +37,7 @@ SQL_MERGE_VALORES = """
         WHEN MATCHED THEN
           UPDATE SET T.VALORES = S.VALORES
 """
-PATH_DOWNLOAD = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}-{date_final}.csv"
+PATH_DOWNLOAD = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}-{date_final}.xlsx"
 
 def transform_df_tmp(df_estadisticas):
     df_estaditica_temporal = df_estadisticas[['ORDEN','ORDEN_SEDE','CODIGO','VALORES']]
@@ -55,6 +55,6 @@ def execution_update(df_estaditica_temporal):
     except Exception as err:
         print(err)
 
-df_estadisticas = pd.read_csv(PATH_DOWNLOAD,sep=';')
+df_estadisticas = pd.read_excel(PATH_DOWNLOAD,sep=';')
 df_estaditica_temporal = transform_df_tmp(df_estadisticas)
 execution_update(df_estaditica_temporal)
