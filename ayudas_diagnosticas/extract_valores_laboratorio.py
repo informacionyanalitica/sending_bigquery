@@ -30,7 +30,8 @@ dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
 TABLA_BIGQUERY_LABORATORIO = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_laboratorio_clinico}'
 
 
-PATH_SAVE_FILE = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}-{date_final}.csv"
+PATH_SAVE_FILE = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}_{date_final}.csv"
+
 SQL_LABORATORIO_LAST_WEEK = f"""SELECT *
                             FROM  `ia-bigquery-397516.ayudas_diagnosticas.laboratorio_clinico_partition` as l
                             WHERE  date(l.FECHA) BETWEEN '{date_initial}' AND '{date_final}'"""
@@ -40,6 +41,7 @@ def save_file(df_estadisticas):
     try:
         if df_estadisticas.shape[0]>0:
             df_estadisticas.to_csv(PATH_SAVE_FILE)
+            return print(date_initial,',',date_final)
         else:
             raise ValueError(f"El archivo no contiene datos")
     except Exception as err:
