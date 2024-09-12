@@ -205,6 +205,3 @@ def check_email_capita():
 
    
 
-print(check_email_capita())
-
-
