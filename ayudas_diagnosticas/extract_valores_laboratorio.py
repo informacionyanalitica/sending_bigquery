@@ -49,9 +49,12 @@ def save_file(df_estadisticas):
 
 def remove_time_zone(df):
     try:
-        df.FECHA = df.FECHA.dt.tz_localize(None)
-        df.FECHA_NACIMIENTO = df.FECHA_NACIMIENTO.dt.tz_localize(None)
-        return df
+        if df.shape[0]>0:
+            df.FECHA = df.FECHA.dt.tz_localize(None)
+            df.FECHA_NACIMIENTO = df.FECHA_NACIMIENTO.dt.tz_localize(None)
+            return df
+        else:
+            raise ValueError(f"El archivo no contiene datos")
     except Exception as err:
         print(err)
 

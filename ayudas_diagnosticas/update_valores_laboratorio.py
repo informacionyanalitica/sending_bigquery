@@ -55,6 +55,6 @@ def execution_update(df_estaditica_temporal):
     except Exception as err:
         print(err)
 
-df_estadisticas = pd.read_excel(PATH_DOWNLOAD,sep=';')
+df_estadisticas = pd.read_excel(PATH_DOWNLOAD)
 df_estaditica_temporal = transform_df_tmp(df_estadisticas)
 execution_update(df_estaditica_temporal)
