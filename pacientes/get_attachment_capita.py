@@ -38,7 +38,7 @@ path_download_drive = f'{PATH_DRIVE}/BASES DE DATOS'
 path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capitalize()}/CAPITA EPS SURA/'
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
-PATH_MESSAGE_READ = f'{PATH_ETL}/files/pacientes/'
+PATH_MESSAGE_READ = f'{PATH_ETL}/etl/files/pacientes/'
 NAME_MESSAGE_READ = 'message_read.csv'
 # Bigquery
 project_id_product = 'ia-bigquery-397516'
