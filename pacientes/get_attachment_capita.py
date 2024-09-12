@@ -15,6 +15,7 @@ load_dotenv()
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 PATH_DRIVE = os.environ.get("PATH_DRIVE")
 PATH_ETL = os.environ.get("PATH_ETL")
+PATH_API = os.environ.get("PATH_API")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
 import func_process
@@ -37,7 +38,8 @@ path_download_drive = f'{PATH_DRIVE}/BASES DE DATOS'
 path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capitalize()}/CAPITA EPS SURA/'
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
-
+PATH_MESSAGE_READ = f'{PATH_ETL}/files/pacientes/'
+NAME_MESSAGE_READ = 'message_read.csv'
 # Bigquery
 project_id_product = 'ia-bigquery-397516'
 
@@ -74,7 +76,7 @@ def validate_load_capita():
 
 def get_message_email(start_date,end_date):
     try:
-        response = requests.get(f'http://10.142.0.4:5000/email/range-date?start_date={start_date}&end_date={end_date}')
+        response = requests.get(f'{PATH_API}/email/range-date?start_date={start_date}&end_date={end_date}')
         message_email= response.json()  
         return message_email['results']
     except ValueError as err:
@@ -83,17 +85,20 @@ def get_message_email(start_date,end_date):
 
 def get_id_message_capita(parameters_email_capita,message_email):
     try:
-        parameters_email_capita['message'] = message_email
-        response = requests.post(f'http://10.142.0.4:5000/email/capita',json=parameters_email_capita)
-        list_id_message = response.json()
-        return list_id_message['result']
+        if len(message_email)>0:
+            parameters_email_capita['message'] = message_email
+            response = requests.post(f'{PATH_API}/email/capita',json=parameters_email_capita)
+            list_id_message = response.json()
+            return list_id_message['result']
+        else:
+            return None
     except ValueError as err:
         print(err)    
 
 
 def download_attachment(parameters_download_attachment):
     try:
-        response = requests.post(f'http://10.142.0.4:5000/email/download_attachment',json=parameters_download_attachment)
+        response = requests.post(f'{PATH_API}/email/download_attachment',json=parameters_download_attachment)
         path_file = response.json()
         return path_file['result']
     except ValueError as err:
@@ -150,18 +155,56 @@ def send_id_attachment(parameters_download_attachment,path_download_capita,list_
     except Exception as err:
             print(err)
 
+def get_message_read():
+    try:
+        df_message_read = pd.DataFrame(columns=['id','threadId'])
+        pattern = os.path.join(PATH_MESSAGE_READ+NAME_MESSAGE_READ)
+        file_exists = glob.glob(pattern)
+        if file_exists:
+            df_message_read = pd.read_csv(PATH_MESSAGE_READ+NAME_MESSAGE_READ)
+        return df_message_read
+    except Exception as err:
+        print(err)
+
+def save_message_new(df_message_new):
+    try:
+        pattern = os.path.join(PATH_MESSAGE_READ)
+        file_exists = glob.glob(pattern)
+        if file_exists:
+            df_message_new.to_csv(PATH_MESSAGE_READ+NAME_MESSAGE_READ,index=False)
+    except Exception as err:
+        print(err)
+
+
+def get_unchecked_messages(message_email):
+    try:
+        if len(message_email)>0:
+            df_message_new = pd.DataFrame(message_email)
+            df_message_read = get_message_read()
+            save_message_new(df_message_new)
+            df_unchecked_messages = df_message_new[~df_message_new.id.isin(df_message_read.id.to_list())]
+            dict_unchecked_messages = df_unchecked_messages.to_dict()
+            return dict_unchecked_messages
+    except Exception as err:
+        print(err)
+
 def check_email_capita():
     exists_email = None
     try:
         total_registros = validate_load_capita()
         if total_registros==0:
             message_email_result = get_message_email(start_date,end_date)
-            list_id_email = get_id_message_capita(parameters_email_capita,message_email_result)
+            dict_unchecked_messages = get_unchecked_messages(message_email_result)
+            list_id_email = get_id_message_capita(parameters_email_capita,dict_unchecked_messages)
             path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
             exists_email = send_id_attachment(parameters_download_attachment,path_download_validated,list_id_email,path_download_api)
         return exists_email
     except Exception as err:
         print(err)
+
+message_email_result = get_message_email(start_date,end_date)
+dict_message = get_unchecked_messages(message_email_result)
+print(dict_message)
    
 
 
