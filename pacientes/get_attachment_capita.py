@@ -84,14 +84,15 @@ def get_message_email(start_date,end_date):
 
 
 def get_id_message_capita(parameters_email_capita,message_email):
+    list_id_message = []
     try:
-        if len(message_email)>0:
+        if bool(message_email['id']):
             parameters_email_capita['message'] = message_email
             response = requests.post(f'{PATH_API}/email/capita',json=parameters_email_capita)
             list_id_message = response.json()
             return list_id_message['result']
         else:
-            return None
+            return list_id_message
     except ValueError as err:
         print(err)    
 
@@ -204,6 +205,6 @@ def check_email_capita():
 
    
 
-
+print(check_email_capita())
 
 
