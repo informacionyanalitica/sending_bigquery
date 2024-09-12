@@ -202,9 +202,6 @@ def check_email_capita():
     except Exception as err:
         print(err)
 
-message_email_result = get_message_email(start_date,end_date)
-dict_message = get_unchecked_messages(message_email_result)
-print(dict_message)
    
 
 
