@@ -27,8 +27,8 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 print(f"Locale configurado: {locale.getlocale()}")
 
 today = datetime.now()
-end_date = today.date()
-start_date = (end_date-timedelta(days=1))
+end_date = (today.date()+timedelta(days=1))
+start_date = (today.date()-timedelta(days=1))
 fecha_capita =today.strftime('%Y-%m-15')
 month_name = today.strftime('%B')
 year_capita = today.strftime('%Y')
@@ -38,7 +38,7 @@ path_download_drive = f'{PATH_DRIVE}/BASES DE DATOS'
 path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capitalize()}/CAPITA EPS SURA/'
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
 NAME_ATTACHMENT = "4_800168083_UNICOPOS"
-PATH_MESSAGE_READ = f'{PATH_ETL}/etl/files/pacientes/'
+PATH_MESSAGE_READ = f'{PATH_ETL}/files/pacientes/'
 NAME_MESSAGE_READ = 'message_read.csv'
 # Bigquery
 project_id_product = 'ia-bigquery-397516'
@@ -84,15 +84,14 @@ def get_message_email(start_date,end_date):
 
 
 def get_id_message_capita(parameters_email_capita,message_email):
-    list_id_message = []
     try:
-        if bool(message_email['id']):
+        list_id_capita = []
+        if len(message_email)>0:
             parameters_email_capita['message'] = message_email
             response = requests.post(f'{PATH_API}/email/capita',json=parameters_email_capita)
-            list_id_message = response.json()
-            return list_id_message['result']
-        else:
-            return list_id_message
+            json_id_message = response.json()
+            list_id_capita = json_id_message['result']
+        return list_id_capita
     except ValueError as err:
         print(err)    
 
@@ -179,13 +178,14 @@ def save_message_new(df_message_new):
 
 def get_unchecked_messages(message_email):
     try:
+        dict_unchecked_messages = {'id':'','threadId':''}
         if len(message_email)>0:
             df_message_new = pd.DataFrame(message_email)
             df_message_read = get_message_read()
             save_message_new(df_message_new)
             df_unchecked_messages = df_message_new[~df_message_new.id.isin(df_message_read.id.to_list())]
-            dict_unchecked_messages = df_unchecked_messages.to_dict()
-            return dict_unchecked_messages
+            dict_unchecked_messages = df_unchecked_messages.to_dict(orient='records')
+        return dict_unchecked_messages
     except Exception as err:
         print(err)
 
@@ -204,4 +204,3 @@ def check_email_capita():
         print(err)
 
    
-
