@@ -128,11 +128,11 @@ def age_years(born_date):
 
 #Funcion que carga cada archivo de la sede y lo junta en uno solo llamado capita
 def load_capita():
-    capita_115393 = load_branch(path_capita, "4_800168083_UNICOPOS_115393.txt")
-    capita_2715 = load_branch(path_capita, "4_800168083_UNICOPOS_2715.txt")
-    capita_2136 = load_branch(path_capita, "4_800168083_UNICOPOS_2136.txt")
-    capita_1013 = load_branch(path_capita, "4_800168083_UNICOPOS_1013.txt")
-    capita_35 = load_branch(path_capita, "4_800168083_UNICOPOS_35.txt")    
+    capita_115393 = load_branch(path_capita, "4_800168083_UNICOPOS_115393.TXT")
+    capita_2715 = load_branch(path_capita, "4_800168083_UNICOPOS_2715.TXT")
+    capita_2136 = load_branch(path_capita, "4_800168083_UNICOPOS_2136.TXT")
+    capita_1013 = load_branch(path_capita, "4_800168083_UNICOPOS_1013.TXT")
+    capita_35 = load_branch(path_capita, "4_800168083_UNICOPOS_35.TXT")    
     capita = func_process.pd.concat([capita_115393, capita_2715, capita_2136, capita_1013, capita_35], ignore_index=True)
     capita.rename(columns={'GENERO':'SEXO'}, inplace= True)
     return capita

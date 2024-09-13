@@ -26,6 +26,9 @@ month_word = today.strftime("%B").capitalize()
 project_id_product = 'ia-bigquery-397516'
 dataset_id_pacientes = 'pacientes'
 
+COLUMNS_REQUIRED = ['FECHA_CAPITA', 'NOMBRE_IPS','SEXO','Poblacion_mayor_2_anos',
+       'Poblacion_menor_igual_4_anos', 'Poblacion_entre_5_19_anos',   
+       'Poblacion_entre_3_15_anos', 'Poblacion_mayor_12_anos']
 # Planificacion familiar
 table_name_poblaciones_nuevos = 'poblaciones_odontologia'
 TABLE_MARIADB_POBLACIONES_NUEVOS = 'poblaciones_odontologia'
@@ -318,7 +321,10 @@ df_poblacion_final = df_may_2.merge(
                                     on=['FECHA CAPITA','NOMBRE IPS','SEXO']
                             )
 
-
+# RENAME COLUMNS
+df_poblacion_final.columns = COLUMNS_REQUIRED
 # Cargar a bigquery
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES_NUEVOS)
 validate_load(validate_loads_logs,df_poblacion_final)
+
+
