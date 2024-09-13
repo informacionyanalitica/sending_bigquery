@@ -16,8 +16,7 @@ import load_bigquery as loadbq
 
 locale.setlocale(locale.LC_TIME, "es_ES.utf8") 
 # VARIBLE - CONSTANTE
-#today = datetime.now()
-today = pd.to_datetime('2024-08-15')
+today = pd.to_datetime(datetime.now().strftime('%Y-%m-15'))
 month_number = int(today.month)
 year = today.strftime("%Y")
 month_word = today.strftime("%B").capitalize()
@@ -326,5 +325,6 @@ df_poblacion_final.columns = COLUMNS_REQUIRED
 # Cargar a bigquery
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES_NUEVOS)
 validate_load(validate_loads_logs,df_poblacion_final)
+
 
 

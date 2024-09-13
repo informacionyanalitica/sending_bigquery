@@ -33,8 +33,8 @@ project_id_product = 'ia-bigquery-397516'
 dataset_id_pacientes = 'pacientes'
 
 # Planificacion familiar
-table_name_poblaciones_nuevos = 'capita_poblaciones'
-TABLE_MARIADB_POBLACIONES = 'capita_poblaciones'
+table_name_poblaciones_nuevos = 'capitas_poblaciones'
+TABLE_MARIADB_POBLACIONES = 'capitas_poblaciones'
 TABLA_BIGQUERY_POBLACIONES = f'{project_id_product}.{dataset_id_pacientes}.{table_name_poblaciones_nuevos}'
 
 COLUMNS_INTEGER = ['POBLACION TOTAL', 'POBLACION TOTAL - F',
