@@ -57,4 +57,6 @@ def execution_update(df_estaditica_temporal):
 
 df_estadisticas = pd.read_excel(PATH_DOWNLOAD)
 df_estaditica_temporal = transform_df_tmp(df_estadisticas)
+# UPDATE BIGQUERY
+validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY_VALORES_TMP)
 execution_update(df_estaditica_temporal)
