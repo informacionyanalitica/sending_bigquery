@@ -37,7 +37,7 @@ SQL_MERGE_VALORES = """
         WHEN MATCHED THEN
           UPDATE SET T.VALORES = S.VALORES
 """
-PATH_DOWNLOAD = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}-{date_final}.xlsx"
+PATH_DOWNLOAD = f"{PATH_DRIVE}/tarifas laboratorio/Actualizar valores/estadisticas {date_initial}_{date_final}.xlsx"
 
 def transform_df_tmp(df_estadisticas):
     df_estaditica_temporal = df_estadisticas[['ORDEN','ORDEN_SEDE','CODIGO','VALORES']]
