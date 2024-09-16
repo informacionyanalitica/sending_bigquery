@@ -51,5 +51,5 @@ def validate_load(df_load):
         print(err)
 
 # Cargar a bigquery
-validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
+validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
 validate_load(validate_loads_logs)
