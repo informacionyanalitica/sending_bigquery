@@ -33,10 +33,10 @@ NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 
 RENAME_COLUMN_REQUIRED = ['identificacion_paciente','nombre_paciente','apellido_paciente','celular','email','orden_cltech','nombre_prueba','resultado',
                           'refmin','refmax','fecha_validacion','fecha_ingreso','orden_sura','identificacion_profesional',
-                          'nombre_profesional','cargo_profesional','sede_profesional','email_profesional'
+                          'nombre_profesional','cargo_profesional','sede_profesional','email_profesional','rol'
                           ]
 COLUMNS_REQUIRED = ['HISTORIA','nombre_paciente','apellido_paciente','celular','email','_order', 'nombre_prueba', 'result', 'refmin', 'refmax','fechaValidacion',
-                        'entryDate', 'autorizacionSura','C_MEDICO', 'MEDICO', 'cargo_gestal', 'SEDE_MEDICO','email_medico']
+                        'entryDate', 'autorizacionSura','C_MEDICO', 'MEDICO', 'cargo_gestal', 'SEDE_MEDICO','email_medico','rol']
 
 # BIGQUERY
 project_id_product = '`ia-bigquery-397516'
@@ -56,7 +56,7 @@ SQL_PERFILES_LABORATORIO =  f"""
                 AND sl.refminSueltos != 'undefined';
                 """
 SQL_LABORATORIO = f"""SELECT distinct lb.ORDEN_SEDE,lb.HISTORIA,lb.NOMBRE,lb.C_MEDICO,lb.MEDICO,lb.cargo_gestal,lb.SEDE_MEDICO,
-                        cp.celular,UPPER(cp.email) AS email,ea.email as email_medico
+                        cp.celular,UPPER(cp.email) AS email,ea.email as email_medico,lb.rol
                     FROM `ia-bigquery-397516.ayudas_diagnosticas.laboratorio_bd_view` as lb
                     JOIN `ia-bigquery-397516.pacientes.capita` as cp on cp.identificacion_paciente = lb.HISTORIA
                     LEFT JOIN `ia-bigquery-397516.empleados.activos` as ea on ea.identificacion = lb.C_MEDICO
