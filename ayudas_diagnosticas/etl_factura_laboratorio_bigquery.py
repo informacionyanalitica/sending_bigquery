@@ -159,7 +159,7 @@ def convert_column_string(df):
 
 # CONVERT INT
 def convert_column_int(df):
-    df.EDAD = df.EDAD.str.replace(r'\D', '', regex=True)
+    df.EDAD = df.EDAD.str.replace(r'\D', '0', regex=True)
     df.EDAD = df.EDAD.astype(int)
     return df
 # CONVERT FECHA
