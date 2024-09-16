@@ -31,7 +31,7 @@ SQL_VALIDATE_LOADS_DAILY = """ SELECT COUNT(*) AS totalCargues
 SQL_VALIDATE_LOADS_WEEKLY = """ SELECT COUNT(*) AS totalCargues
                         FROM reportes.logsCarguesBigquery AS lg
                         WHERE lg.idBigquery = '{idBigquery}'
-                        AND DATE(lg.fechaCargue) >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
+                        AND DATE(lg.fechaCargue) >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
                         AND DATE(lg.fechaCargue) < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY)
                         """
 
