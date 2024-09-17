@@ -52,15 +52,15 @@ sql_capita_mes = "SELECT identificacion_paciente, fecha_nacimiento, edad FROM ca
 
 sql_poblaciones_odontologia = f"""
                                 SELECT 
-                                    `FECHA CAPITA` AS fecha_capita,
-                                    `NOMBRE IPS` AS nombre_sede,
+                                    `FECHA_CAPITA` AS fecha_capita,
+                                    `NOMBRE_IPS` AS nombre_sede,
                                     Poblacion_mayor_2_anos,
                                     Poblacion_menor_igual_4_anos,
                                     Poblacion_entre_5_19_anos,
                                     Poblacion_entre_3_15_anos,
                                     Poblacion_mayor_12_anos
                                 FROM analitica.poblaciones_odontologia
-                                WHERE `FECHA CAPITA` = '{fecha_capita.strftime('%Y-%m-%d')}' 
+                                WHERE `FECHA_CAPITA` = '{fecha_capita.strftime('%Y-%m-%d')}' 
                                 """
 codigo_sedes = {
         'CENTRO':35, 
