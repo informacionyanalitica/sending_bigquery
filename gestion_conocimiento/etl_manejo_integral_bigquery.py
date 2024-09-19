@@ -42,6 +42,7 @@ def convert_date(df):
 def convert_number(df):
     try:
         # Convert year
+        df.ano.replace('','0',inplace=True)
         df.ano.fillna(0, inplace=True)
         df.ano = df.ano.astype(int)
         # Clean empty data and signs
