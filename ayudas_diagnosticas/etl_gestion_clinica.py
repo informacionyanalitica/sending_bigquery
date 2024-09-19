@@ -29,6 +29,17 @@ PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"}
 PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
 NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 
+# Name project BQ
+project_id_product = 'ia-bigquery-397516'
+
+# DATASET AYUDAS DIAGNOSTICAS
+dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
+
+# TABLAS
+table_name_laboratorio_clinico = 'laboratorio_clinico_partition'
+
+# ID BIGQUERY
+TABLA_BIGQUERY_LABORATORIO_CLINICO = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_laboratorio_clinico}'
 
 
 RENAME_COLUMN_REQUIRED = ['identificacion_paciente','nombre_paciente','apellido_paciente','celular','email','orden_cltech','nombre_prueba','resultado',
@@ -84,10 +95,11 @@ def validate_folder():
         print(err)
 
 
-def validate_save_file(df_gestion_medica):
+def validate_save_file(df_gestion_medica,df_validate_load):
     try:
         validate_folder()
-        if df_gestion_medica.shape[0] >0:
+        totalCargues =df_validate_load.totalCargues[0]
+        if df_gestion_medica.shape[0] >0 and totalCargues>0:
             df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
         files_exists = glob.glob(pattern_files)
@@ -109,8 +121,9 @@ def get_merge(df_perfiles,df_laboratorio_sin_duplicados):
         print(err)
 
 
-
+# VALIDATE LOAD LABORATORIO CLINICO
+validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY_LABORATORIO_CLINICO)
 
 df_laboratorio_sin_duplicados,df_perfiles = read_dataset()
 df_gestion_medica = get_merge(df_perfiles,df_laboratorio_sin_duplicados)
-validate_save_file(df_gestion_medica)
+validate_save_file(df_gestion_medica,validate_loads_logs)
