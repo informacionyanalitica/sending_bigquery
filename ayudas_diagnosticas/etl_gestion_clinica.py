@@ -36,7 +36,7 @@ project_id_product = 'ia-bigquery-397516'
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
 
 # TABLAS
-table_name_laboratorio_clinico = 'laboratorio_clinico_partition'
+table_name_laboratorio_clinico = 'laboratorio_clinico_partitions'
 
 # ID BIGQUERY
 TABLA_BIGQUERY_LABORATORIO_CLINICO = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_laboratorio_clinico}'
@@ -99,7 +99,7 @@ def validate_save_file(df_gestion_medica,df_validate_load):
     try:
         validate_folder()
         totalCargues =df_validate_load.totalCargues[0]
-        if df_gestion_medica.shape[0] >0 and totalCargues>0:
+        if df_gestion_medica.shape[0] >0 and totalCargues==0:
             df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
         files_exists = glob.glob(pattern_files)
