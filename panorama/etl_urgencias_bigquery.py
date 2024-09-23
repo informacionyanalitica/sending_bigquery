@@ -20,8 +20,10 @@ VALIDATOR_COLUMN = 'column_validator'
 
 SQL_URGENCIAS_PANORAMA = """SELECT *
                 FROM reportes.urgenciasPanoramaView AS tc
-                WHERE date(tc.fecha_cargue) BETWEEN  DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
-                    AND  DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY)'
+                #WHERE date(tc.fecha_cargue) BETWEEN  DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
+                #    AND  DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY)
+                WHERE BETWEEN DATE_SUB('2024-09-22', INTERVAL WEEKDAY('2024-09-22') + 1 DAY)
+                AND  DATE_ADD(DATE_SUB('2024-09-22', INTERVAL WEEKDAY('2024-09-22') + 1 DAY), INTERVAL 7 DAY)
                 """
 SQL_LAST_DATE_LOAD = """SELECT max(ct.fecha_cargue) AS last_date_load
                          FROM `ia-bigquery-397516.panorama.urgencias` as ct """
