@@ -64,7 +64,17 @@ SQL_PERFILES_LABORATORIO =  f"""
                 WHERE sl.pathologySueltos = 'true'
                 and DATE(sl.fechaValidacionSueltos) = '{date_execution}'
                 AND sl.resultSueltos != 'MEMO' 
-                AND sl.refminSueltos != 'undefined';
+                AND sl.refminSueltos != 'undefined'
+                UNION 
+                SELECT pl._order,pl.name AS nombre_prueba,pl.result AS result,pl.refmin AS refmin,pl.refmax AS refmax,
+	                pl.pathology AS pathology,pl.fechaValidacion AS fechaValidacion,pl.patientId,pl.entryDate,
+	                pl.autorizacionSura,pl.namePatient as nombre_paciente,pl.lastaNamePatient as apellido_paciente
+                FROM reportes.perfilesExamenesView AS pl
+                WHERE pl.pathology = 'true'
+                and DATE(pl.fechaValidacion) = '{date_execution}'
+                AND pl.result != 'MEMO' 
+                AND pl.refmin != 'undefined';
+                
                 """
 SQL_LABORATORIO = f"""SELECT distinct lb.ORDEN_SEDE,lb.HISTORIA,lb.NOMBRE,lb.C_MEDICO,lb.MEDICO,lb.cargo_gestal,lb.SEDE_MEDICO,
                         cp.celular,UPPER(cp.email) AS email,ea.email as email_medico,lb.rol
