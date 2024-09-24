@@ -30,6 +30,9 @@ import locale
 import warnings
 warnings.filterwarnings('ignore')
 
+DB_ANALITICA = 'analitica'
+DB_REPORTES = 'reportes'
+
 def timer(func):
     """A decorator that prints how long a function took to run."""
     # Define the wrapper function to return.
@@ -44,26 +47,36 @@ def timer(func):
         return result
     return wrapper
 
-HOST = os.environ.get("DB_HOST")
-PORT = os.environ.get("DB_PORT")
-DB_USER = os.environ.get("DB_USER")
-PASSWORD = os.environ.get("DB_PASSWORD")
-DB_ANALITICA = 'analitica'
-DB_REPORTES = 'reportes'
+def create_engine_db(server_to_connect,data_base):
+    try:
+        if server_to_connect == 'transaction':
+            host = os.environ.get("DB_HOST_TRANSACTION")
+            port = os.environ.get("DB_PORT_TRANSACTION")
+            db_user = os.environ.get("DB_USER_TRANSACTION")
+            password = os.environ.get("DB_PASSWORD_TRANSACTION")
+        if server_to_connect == 'local':
+            host = os.environ.get("DB_HOST_LOCAL")
+            port = os.environ.get("DB_PORT_LOCAL")
+            db_user = os.environ.get("DB_USER_LOCAL")
+            password = os.environ.get("DB_PASSWORD_LOCAL")
+        engine = create_engine(f"mysql+pymysql://{db_user}:{password}@{host}:{port}/{data_base}")
+        return engine
+    except Exception as err:
+        print(err)
 
 
-CONFIG_MARIADB = {'user':DB_USER, 'password':PASSWORD, 'host':HOST,'port':PORT}
+CONFIG_MARIADB = {'user':os.environ.get("DB_USER_TRANSACTION"), 
+                  'password':os.environ.get("DB_PASSWORD_TRANSACTION"), 
+                  'host':os.environ.get("DB_HOST_TRANSACTION"),
+                  'port':os.environ.get("DB_PORT_TRANSACTION")}
 # Funcion que consulta en la base de datos indicada la consulta relacionada
 @timer
-def load_df_server(sql, data_base):
+def load_df_server(sql, data_base,server_to_connect='transaction'):
     """Funcion que trae del servidor la tabla o df que se le consulte en sql,
     especificando el nombre de la base de datos a consultar data_base"""
     
-    if (data_base != 'analitica' and data_base != 'reportes'):
-        print('No se identifica base de datos destino: \n', data_base)
-        return    
     try:
-        engine = create_engine(f"mysql+pymysql://{DB_USER}:{PASSWORD}@{HOST}:{PORT}/{data_base}")
+        engine = create_engine_db(server_to_connect,data_base)
     except SQLAlchemyError as e:
         print('Ocurrió un error con el engine_reportes: \n', e.__cause__)        
     try:
@@ -75,9 +88,9 @@ def load_df_server(sql, data_base):
         print('Ocurrió un error al realizar la consulta: \n', e.__cause__)
         return
     
-def command_sql(sql, data_base):
+def command_sql(sql, data_base,server_to_connect='transaction'):
     try:
-        session = create_engine(f"mysql+pymysql://{DB_USER}:{PASSWORD}@{HOST}:{PORT}/{data_base}")
+        session = create_engine_db(server_to_connect,data_base)
     except SQLAlchemyError as e:
         print('Ocurrió un error con el engine_reportes: \n', e.__cause__)        
     try:
@@ -108,16 +121,12 @@ def insert_rows(sql_insert):
     
     
 @timer
-def save_df_server(df, name, data_base, if_exist='append'):
+def save_df_server(df, name, data_base, if_exist='append',server_to_connect='transaction'):
     """Funcion que guarda en el servidor de bases de datos el df que se le asigne df:'DataFrame'
     especificando nombre name:'str', nombre de la base de datos data_base:'str' y que accion
-    realizar en caso de que la tabla exista if_exist:'str' - defaul='append'"""
-    
-    if (data_base != 'analitica' and data_base != 'reportes' and data_base != 'facturaElectronica'):
-        print('No se identifica base de datos destino: \n', data_base)
-        return    
+    realizar en caso de que la tabla exista if_exist:'str' - defaul='append'"""   
     try:
-        engine = create_engine(f"mysql+pymysql://{DB_USER}:{PASSWORD}@{HOST}:{PORT}/{data_base}")
+        engine = create_engine_db(server_to_connect,data_base)
     except SQLAlchemyError as e:
         print('Ocurrió un error con el engine_reportes: \n', e.__cause__)    
     try:
@@ -132,12 +141,8 @@ def load_df_mariadb_server(sql, data_base):
     """Funcion que trae del servidor la tabla o df que se le consulte en sql:'str',
     especificando el nombre de la base de datos a consultar data_base:'str'
     Este procedimiento lo ejecuta con la libreria de MariaDB"""
-    
-    if (data_base != 'analitica' and data_base != 'reportes'):
-        print('No se identifica base de datos destino: \n', data_base)
-        return
     try:    
-        conexion_db = mariadb.connect(host=HOST,port=PORT,user=DB_USER,password=PASSWORD,database=data_base)
+        conexion_db = mariadb.connect(**CONFIG_MARIADB)
         try:        
             df = pd.read_sql(sql, conexion_db)       
             print("Conexion con éxito")
