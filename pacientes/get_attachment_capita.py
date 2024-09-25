@@ -33,7 +33,8 @@ fecha_capita =today.strftime('%Y-%m-15')
 month_name = today.strftime('%B')
 year_capita = today.strftime('%Y')
 month_number = today.strftime('%m')
-name_subject = f'Fwd: Capitación {month_name} {year_capita}'
+name_subject = 'Fwd: Capitación'
+name_subject_dynamic = f'{name_subject} {month_name} {year_capita}'
 path_download_drive = f'{PATH_DRIVE}/BASES DE DATOS'
 path_download_dynamic = f'{year_capita}/{int(month_number)}. {month_name.capitalize()}/CAPITA EPS SURA/'
 path_download_api = f'/root/google-drive/BASES DE DATOS/{path_download_dynamic}'
@@ -50,13 +51,15 @@ table_name_capita_poblaciones = 'capitas_poblaciones'
 TABLA_BIGQUERY_CAPITA_POBLACIONES = f'{project_id_product}.{dataset_id_pacientes}.{table_name_capita_poblaciones}'
 
 # SQL
-SQL_CAPITA_POBLACIONES = f"""SELECT COUNT(*) as total_registros
-                    FROM `ia-bigquery-397516.pacientes.capitas_poblaciones` as cp
-                    where date(cp.fecha_capita) = '{fecha_capita}'"""
+SQL_ID_SUBJECT = """SELECT  cc.nombreAsunto
+                    JOIN apigmail.maestraasuntos AS ms ON ms.idAsunto = cc.idAsunto
+                    WHERE ms.nombreAsunto = '{}'
+                    
+                    """
 
 # Diccionario con parametros vacios para completar en el flujo
 parameters_email_capita = {
-            "name_subject":name_subject,
+            "name_subject":name_subject_dynamic,
             "message":''
         }
 parameters_download_attachment =  {
@@ -67,33 +70,11 @@ parameters_download_attachment =  {
 
 def validate_load_capita():
     try:
-        df_capita_poblaciones = loadbq.read_data_bigquery(SQL_CAPITA_POBLACIONES, TABLA_BIGQUERY_CAPITA_POBLACIONES)
-        total_registros = df_capita_poblaciones.total_registros[0]
-        return total_registros            
+        df_load_capita =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_CAPITA_POBLACIONES)
+        totalCargues = df_load_capita.totalCargues[0]
+        return totalCargues            
     except Exception as err:
         print(err)
-
-
-def get_message_email(start_date,end_date):
-    try:
-        response = requests.get(f'{PATH_API}/email/range-date?start_date={start_date}&end_date={end_date}')
-        message_email= response.json()  
-        return message_email['results']
-    except ValueError as err:
-        print(err)    
-
-
-def get_id_message_capita(parameters_email_capita,message_email):
-    try:
-        list_id_capita = []
-        if len(message_email)>0:
-            parameters_email_capita['message'] = message_email
-            response = requests.post(f'{PATH_API}/email/capita',json=parameters_email_capita)
-            json_id_message = response.json()
-            list_id_capita = json_id_message['result']
-        return list_id_capita
-    except ValueError as err:
-        print(err)    
 
 
 def download_attachment(parameters_download_attachment):
@@ -155,37 +136,13 @@ def send_id_attachment(parameters_download_attachment,path_download_capita,list_
     except Exception as err:
             print(err)
 
-def get_message_read():
+def get_id_message_detected(name_subject):
     try:
-        df_message_read = pd.DataFrame(columns=['id','threadId'])
-        pattern = os.path.join(PATH_MESSAGE_READ+NAME_MESSAGE_READ)
-        file_exists = glob.glob(pattern)
-        if file_exists:
-            df_message_read = pd.read_csv(PATH_MESSAGE_READ+NAME_MESSAGE_READ)
-        return df_message_read
-    except Exception as err:
-        print(err)
-
-def save_message_new(df_message_new):
-    try:
-        pattern = os.path.join(PATH_MESSAGE_READ)
-        file_exists = glob.glob(pattern)
-        if file_exists:
-            df_message_new.to_csv(PATH_MESSAGE_READ+NAME_MESSAGE_READ,index=False)
-    except Exception as err:
-        print(err)
-
-
-def get_unchecked_messages(message_email):
-    try:
-        dict_unchecked_messages = {'id':'','threadId':''}
-        if len(message_email)>0:
-            df_message_new = pd.DataFrame(message_email)
-            df_message_read = get_message_read()
-            save_message_new(df_message_new)
-            df_unchecked_messages = df_message_new[~df_message_new.id.isin(df_message_read.id.to_list())]
-            dict_unchecked_messages = df_unchecked_messages.to_dict(orient='records')
-        return dict_unchecked_messages
+        df_message_detected = pd.DataFrame()
+        df_message_detected = func_process.load_df_server(SQL_ID_SUBJECT.format(name_subject),'api_gmail',server_to_connect='local') 
+        if df_message_detected.shape[0]>0:
+            list_id_email = df_message_detected.nombreAsunto.to_list()
+            return list_id_email
     except Exception as err:
         print(err)
 
@@ -194,9 +151,7 @@ def check_email_capita():
     try:
         total_registros = validate_load_capita()
         if total_registros==0:
-            message_email_result = get_message_email(start_date,end_date)
-            dict_unchecked_messages = get_unchecked_messages(message_email_result)
-            list_id_email = get_id_message_capita(parameters_email_capita,dict_unchecked_messages)
+            list_id_email = get_id_message_detected(name_subject)
             path_download_validated = validate_exist_path(path_download_drive,path_download_dynamic)
             exists_email = send_id_attachment(parameters_download_attachment,path_download_validated,list_id_email,path_download_api)
         return exists_email
