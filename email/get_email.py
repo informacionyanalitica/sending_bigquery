@@ -159,3 +159,5 @@ def execution_detect_emails():
             load_message_detected(df_message_detected)
     except Exception as err:
         print(err)
+
+execution_detect_emails()
