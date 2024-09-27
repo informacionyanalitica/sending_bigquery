@@ -16,20 +16,20 @@ import load_bigquery as loadbq
 
 SQL_PAGOS_BD = """SELECT *
                 FROM reportes.pagosHistoricosView AS p
-            WHERE date(p.fechaPago) = CURDATE()
-            
+            WHERE date(p.fechaPago) = CURDATE()            
+
                 """
                 
 SQL_BIGQUERY = """
-                SELECT g.factura
+                SELECT g.numeroAutorizacion
                 FROM {} as g
-                WHERE factura IN {}
+                WHERE numeroAutorizacion IN {}
                 """
 
 project_id_product = 'ia-bigquery-397516'
 dataset_id_recaudo = 'recaudos'
 table_name_pagos = 'pagos'
-validator_column = 'factura'
+validator_column = 'numeroAutorizacion'
 
 TABLA_BIGQUERY = f'{project_id_product}.{dataset_id_recaudo}.{table_name_pagos}'
  
