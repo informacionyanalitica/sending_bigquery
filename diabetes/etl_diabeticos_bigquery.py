@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
+PATH_DRIVE = os.environ.get("PATH_DRIVE")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
 import func_process
@@ -400,7 +401,7 @@ def validacion_examenes_hb1ac(df_diabeticos_hb1Ac):
         
         
 # Read data
-diabeticos_mes_anterior = func_process.pd.read_csv(f"G:/Mi unidad/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_capita.year}.csv",
+diabeticos_mes_anterior = func_process.pd.read_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_capita.year}.csv",
                                                     delimiter=';', 
                                                     dtype = {"identificacion_paciente" : "object"})
 
@@ -446,7 +447,7 @@ df_rips_hta = df_rips_diabetes_hta[df_rips_diabetes_hta['codigo_sura'].isin(['89
         
 # Guardar pacientes diabeticos del mes actual
 diabeticos_mes = df_diabeticos[['identificacion_paciente','sw_diabetes']]
-diabeticos_mes.to_csv(f"G:/Mi unidad/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes}_{fecha_capita.year}.csv", sep=';', encoding='utf-8', index= False)
+diabeticos_mes.to_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes}_{fecha_capita.year}.csv", sep=';', encoding='utf-8', index= False)
 
 # Crear columnas pacientes diabeticos nuevos con respecto al mes anterior
 df_diabeticos.insert(10, 'nuevo', df_diabeticos['identificacion_paciente'].mask(df_diabeticos['identificacion_paciente'].isin(diabeticos_mes_anterior['identificacion_paciente']), other= 0))
