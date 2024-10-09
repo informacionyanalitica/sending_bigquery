@@ -36,19 +36,19 @@ month_number = today.strftime('%m')
 # SQL
 SQL_EMAILS_DETECTED = f"""
                     SELECT md.idAsunto,ma.nombreAsunto
-                    FROM apigmail.mensajesdetectados AS md
-                    JOIN apigmail.maestraasuntos AS ma ON ma.idAsunto = md.idAsunto
+                    FROM apiGmail.mensajesDetectados AS md
+                    JOIN apiGmail.maestraAsuntos AS ma ON ma.idAsunto = md.idAsunto
                             AND ma.activo = 1
                     WHERE YEAR(md.fechaCreacion) = {year_capita}
                     AND MONTH(md.fechaCreacion) = {month_number};
                     """
 SQL_MESSAGE_READ = """ SELECT cc.id,cc.threadId
-                FROM apigmail.mensajesleidos AS cc
+                FROM apiGmail.mensajesLeidos AS cc
                 WHERE date(cc.fechaCreacion) >= date_sub(CURDATE(), INTERVAL 2 DAY)
                 """
 
 SQL_MAESTRA_ASUNTOS = """SELECT ma.idAsunto,ma.nombreAsunto 
-                        FROM apigmail.maestraasuntos AS ma
+                        FROM apiGmail.maestraAsuntos AS ma
                         WHERE ma.activo = 1"""
 
 # Diccionario con parametros vacios para completar en el flujo
