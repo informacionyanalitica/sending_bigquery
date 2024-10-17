@@ -22,25 +22,32 @@ import extract_file_gdrive as filesGD
 # LOCALE
 locale.setlocale(locale.LC_TIME, "es_ES.utf8")  
 
-date_load = (datetime.now() - timedelta(days=1))
+today = datetime.now()
+date_load = (today - timedelta(days=1))
 date_execution = date_load.date()
 MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
 PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
 NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 
+
+# SQL
+SQL_VALIDATE_LOAD = """SELECT COUNT(*) AS totalCargues
+                    FROM reportes.logsCarguesBigquery AS lg
+                    WHERE lg.idBigquery = '{}'
+                    AND DATE(lg.fechaCargue) = '{}'"""
+
 # Name project BQ
 project_id_product = 'ia-bigquery-397516'
-
 # DATASET AYUDAS DIAGNOSTICAS
 dataset_id_ayudas_diagnosticas = 'ayudas_diagnosticas'
 
 # TABLAS
-table_name_laboratorio_clinico = 'laboratorio_clinico_partitions'
+table_name_laboratorio_clinico = 'laboratorio_clinico_partition'
 
 # ID BIGQUERY
 TABLA_BIGQUERY_LABORATORIO_CLINICO = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_laboratorio_clinico}'
-
+# ia-bigquery-397516.ayudas_diagnosticas.laboratorio_clinico_partition
 
 RENAME_COLUMN_REQUIRED = ['identificacion_paciente','nombre_paciente','apellido_paciente','celular','email','orden_cltech','nombre_prueba','resultado',
                           'refmin','refmax','fecha_validacion','fecha_ingreso','orden_sura','identificacion_profesional',
@@ -86,6 +93,13 @@ SQL_LABORATORIO = f"""SELECT distinct lb.ORDEN_SEDE,lb.HISTORIA,lb.NOMBRE,lb.C_M
                     AND lb.ORDEN_SEDE != '1'"""
 
 # FUNCTION
+def validate_loads_daily():
+    try:
+        df_load_daily = func_process.load_df_server(SQL_VALIDATE_LOAD.format(TABLA_BIGQUERY_LABORATORIO_CLINICO,today.date()),'reportes')
+        return df_load_daily
+    except Exception as err:
+        print(err)
+
 def read_dataset():
     try:
         df_laboratorio_view = loadbq.read_data_bigquery(SQL_LABORATORIO,TABLA_BIGQUERY_LABORATORIO_VIEW)
@@ -109,7 +123,7 @@ def validate_save_file(df_gestion_medica,df_validate_load):
     try:
         validate_folder()
         totalCargues =df_validate_load.totalCargues[0]
-        if df_gestion_medica.shape[0] >0 and totalCargues==0:
+        if df_gestion_medica.shape[0] >0 and totalCargues>0:
             df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
         files_exists = glob.glob(pattern_files)
@@ -132,8 +146,7 @@ def get_merge(df_perfiles,df_laboratorio_sin_duplicados):
 
 
 # VALIDATE LOAD LABORATORIO CLINICO
-validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY_LABORATORIO_CLINICO)
-
+validate_loads_logs =  validate_loads_daily()
 df_laboratorio_sin_duplicados,df_perfiles = read_dataset()
 df_gestion_medica = get_merge(df_perfiles,df_laboratorio_sin_duplicados)
 validate_save_file(df_gestion_medica,validate_loads_logs)
