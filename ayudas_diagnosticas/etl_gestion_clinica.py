@@ -28,7 +28,6 @@ date_execution = date_load.date()
 MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
 PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
-NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
 pathology = sys.argv[1]
 
 # SQL
@@ -118,14 +117,22 @@ def validate_folder():
     except Exception as err:
         print(err)
 
+def generate_file_name(pathology):
+    if pathology =='true':
+        name_file = 'Gestión Clínica '+str(date_execution)+'.xlsx'
+    else:
+        name_file = '/Gestión Clínica '+str(date_load.date())+ 'Normales.xlsx'
+    return name_file
 
-def validate_save_file(df_gestion_medica,df_validate_load):
+
+def validate_save_file(df_gestion_medica,df_validate_load,pathology):
     try:
         validate_folder()
         totalCargues =df_validate_load.totalCargues[0]
         if df_gestion_medica.shape[0] >0 and totalCargues>0:
-            df_gestion_medica.to_excel(PATH_FILE_SAVE+NAME_FILE, index=False) 
-        pattern_files = os.path.join(PATH_FILE_SAVE,NAME_FILE)
+            name_file = generate_file_name(pathology)
+            df_gestion_medica.to_excel(PATH_FILE_SAVE+name_file, index=False) 
+        pattern_files = os.path.join(PATH_FILE_SAVE,name_file)
         files_exists = glob.glob(pattern_files)
         if not files_exists:
             raise ValueError(f"No se encontraron archivos con el patrón: {pattern_files}")
@@ -149,4 +156,4 @@ def get_merge(df_perfiles,df_laboratorio_sin_duplicados):
 validate_loads_logs =  validate_loads_daily()
 df_laboratorio_sin_duplicados,df_perfiles = read_dataset()
 df_gestion_medica = get_merge(df_perfiles,df_laboratorio_sin_duplicados)
-validate_save_file(df_gestion_medica,validate_loads_logs)
+validate_save_file(df_gestion_medica,validate_loads_logs,pathology)
