@@ -121,7 +121,7 @@ def generate_file_name(pathology):
     if pathology =='true':
         name_file = 'Gestión Clínica '+str(date_execution)+'.xlsx'
     else:
-        name_file = '/Gestión Clínica '+str(date_load.date())+ 'Normales.xlsx'
+        name_file = 'Gestión Clínica '+str(date_load.date())+ ' Normales.xlsx'
     return name_file
 
 
