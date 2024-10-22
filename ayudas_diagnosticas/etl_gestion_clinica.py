@@ -29,7 +29,7 @@ MONTH_NAME = date_load.strftime('%B').capitalize()
 PATH_GESTION_CLINICA = {"path_folder":"Gestión Clínica"} 
 PATH_FILE_SAVE = f'{PATH_ETL}/etl/files/ayudas_diagnosticas/{MONTH_NAME}/'
 NAME_FILE = 'Gestión Clínica '+str(date_execution)+'.xlsx'
-
+pathology = sys.argv[1]
 
 # SQL
 SQL_VALIDATE_LOAD = """SELECT COUNT(*) AS totalCargues
@@ -68,7 +68,7 @@ SQL_PERFILES_LABORATORIO =  f"""
                 sl.pathologySueltos AS pathology,sl.fechaValidacionSueltos AS fechaValidacion,sl.patientId,sl.entryDate,
                 sl.autorizacionSura,sl.name as nombre_paciente,sl.lastName as apellido_paciente
                 FROM reportes.examenesLaboratorioView AS sl
-                WHERE sl.pathologySueltos = 'true'
+                WHERE sl.pathologySueltos = '{pathology}'
                 and DATE(sl.fechaValidacionSueltos) = '{date_execution}'
                 AND sl.resultSueltos != 'MEMO' 
                 AND sl.refminSueltos != 'undefined'
@@ -77,7 +77,7 @@ SQL_PERFILES_LABORATORIO =  f"""
 	                pl.pathology AS pathology,pl.fechaValidacion AS fechaValidacion,pl.patientId,pl.entryDate,
 	                pl.autorizacionSura,pl.namePatient as nombre_paciente,pl.lastaNamePatient as apellido_paciente
                 FROM reportes.perfilesExamenesView AS pl
-                WHERE pl.pathology = 'true'
+                WHERE pl.pathology = '{pathology}'
                 and DATE(pl.fechaValidacion) = '{date_execution}'
                 AND pl.result != 'MEMO' 
                 AND pl.refmin != 'undefined';
