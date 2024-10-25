@@ -118,10 +118,9 @@ def validate_folder():
         print(err)
 
 def generate_file_name(pathology):
+    name_file = 'Gestión Clínica '+str(date_load.date())+ ' Normales.xlsx'
     if pathology =='true':
-        name_file = 'Gestión Clínica '+str(date_execution)+'.xlsx'
-    else:
-        name_file = 'Gestión Clínica '+str(date_load.date())+ ' Normales.xlsx'
+        name_file = 'Gestión Clínica '+str(date_execution)+'.xlsx'        
     return name_file
 
 
@@ -129,8 +128,8 @@ def validate_save_file(df_gestion_medica,df_validate_load,pathology):
     try:
         validate_folder()
         totalCargues =df_validate_load.totalCargues[0]
+        name_file = generate_file_name(pathology)
         if df_gestion_medica.shape[0] >0 and totalCargues>0:
-            name_file = generate_file_name(pathology)
             df_gestion_medica.to_excel(PATH_FILE_SAVE+name_file, index=False) 
         pattern_files = os.path.join(PATH_FILE_SAVE,name_file)
         files_exists = glob.glob(pattern_files)
