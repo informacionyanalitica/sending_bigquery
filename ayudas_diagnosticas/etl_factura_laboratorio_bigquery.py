@@ -23,6 +23,7 @@ locale.setlocale(locale.LC_TIME, "es_ES.utf8")
 
 # Execution
 fecha = (datetime.now() - timedelta(days=1))
+print(fecha)
 capita_date = func_process.pd.to_datetime(fecha.strftime('%Y-%m')+'-15')
 year = capita_date.strftime('%Y')
 month_word = capita_date.strftime('%B').capitalize()
@@ -364,8 +365,9 @@ laboratorio_bd_tarifa_costo_2_rol = update_valores_alergenos(laboratorio_bd_tari
 
 # Empleados con menos de cuatro meses
 laboratorio_bd_tarifa_costo_2_rol['menosCuatroMeses'] = 2
-empleados.tiempoMesIngreso = empleados.tiempoMesIngreso.astype(int)
-menor_igual_cuatro_meses = empleados[empleados.tiempoMesIngreso <=4].index
+laboratorio_bd_tarifa_costo_2_rol['tiempoMesIngreso'].fillna(0,inplace=True)
+laboratorio_bd_tarifa_costo_2_rol.tiempoMesIngreso = laboratorio_bd_tarifa_costo_2_rol.tiempoMesIngreso.astype(int)
+menor_igual_cuatro_meses = laboratorio_bd_tarifa_costo_2_rol[laboratorio_bd_tarifa_costo_2_rol.tiempoMesIngreso <=4].index
 laboratorio_bd_tarifa_costo_2_rol.loc[menor_igual_cuatro_meses, 'menosCuatroMeses'] = 1
 # Actualizar nombre dianostico desde maestra ciediez
 df_laboratorio_ciediez = laboratorio_bd_tarifa_costo_2_rol.merge(df_maestra_ciediez[['codigo','nombre']], how='left', left_on='codigoDiagnostico', right_on='codigo')
