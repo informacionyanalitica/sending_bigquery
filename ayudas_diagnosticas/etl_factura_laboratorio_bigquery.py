@@ -2,8 +2,6 @@ import pandas as pd
 import sys
 import os
 from datetime import datetime,timedelta
-import time
-import numpy as np
 from unicodedata import decimal
 import extract_alergenos
 from dotenv import load_dotenv
@@ -23,7 +21,6 @@ locale.setlocale(locale.LC_TIME, "es_ES.utf8")
 
 # Execution
 fecha = (datetime.now() - timedelta(days=1))
-print(fecha)
 capita_date = func_process.pd.to_datetime(fecha.strftime('%Y-%m')+'-15')
 year = capita_date.strftime('%Y')
 month_word = capita_date.strftime('%B').capitalize()
@@ -160,7 +157,7 @@ def convert_column_string(df):
 
 # CONVERT INT
 def convert_column_int(df):
-    df.EDAD = df.EDAD.str.replace(r'\D', '0', regex=True)
+    df.EDAD = df.EDAD.str.replace(r'\D', '', regex=True)
     df.EDAD = df.EDAD.astype(int)
     return df
 # CONVERT FECHA
