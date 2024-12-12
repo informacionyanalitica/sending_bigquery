@@ -48,11 +48,13 @@ dataset_id_pacientes = 'pacientes'
 table_name_valores_laboratorio = 'valores_laboratorio'
 table_name_laboratorio_clinico = 'laboratorio_clinico_partition'
 table_name_capita_poblaciones = 'capitas_poblaciones'
+table_name_capita = 'capita'
 
 # ID BIGQUERY
 TABLA_BIGQUERY_VALORES = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_valores_laboratorio}'
 TABLA_BIGQUERY_LABORATORIO_CLINICO = f'{project_id_product}.{dataset_id_ayudas_diagnosticas}.{table_name_laboratorio_clinico}'
 TABLA_BIGQUERY_CAPITA_POBLACIONES = f'{project_id_product}.{dataset_id_pacientes}.{table_name_capita_poblaciones}'
+TABLA_BIGQUERY_CAPITA = f'{project_id_product}.{dataset_id_pacientes}.{table_name_capita}'
 # TABLA MARIADB
 TABLA_MARIADB = 'laboratorio_bd'
 
@@ -69,7 +71,7 @@ COLUMNS_REQUIRED = ['ORDEN', 'HISTORIA', 'APELLIDO', 'SEGUNDO_APELLIDO', 'NOMBRE
        'SEDE_MEDICO','SECCION','TARIFA_COSTO', 'POBLACION_SEDE', 'rol', 'rol_2',
        'estado_empleado', 'cumplimiento_pyg', 'cumplimiento_pyg_coopsana','cargo_gestal',
        'sw_traslado_dm','cumplimiento_pyg_sedes_totales','menosCuatroMeses','poblacionCoopsana',
-       'condicionSalud','atendido','percentilRiesgo' ]
+       'condicionSalud','atendido','percentilRiesgo','fecha_capita','sede_capita']
 
 sql_autorizaciones = f"""
                         SELECT 
@@ -87,12 +89,17 @@ sql_autorizaciones = f"""
 SQL_CAPITA_POBLACIONES = f"""
                  SELECT 
                 FECHA_CAPITA, 
-            NOMBRE_IPS AS SEDE, 
+                nombre_ips,
+                codigo_ips as codigo_sede,
             POBLACION_TOTAL
                 FROM `ia-bigquery-397516.pacientes.capitas_poblaciones`
                 WHERE extract(year from FECHA_CAPITA) = {year}   
                 AND FECHA_CAPITA = (SELECT  max(FECHA_CAPITA) FROM `ia-bigquery-397516.pacientes.capitas_poblaciones`)
     """
+
+SQL_CAPITA = """SELECT cc.identificacion_paciente as Historia,ms.codigo_sede,ms.nombre_sede as sede_capita
+            FROM `ia-bigquery-397516.pacientes.capita` as cc
+            JOIN `ia-bigquery-397516.maestras.sedes` as ms on ms.codigo_sede = cc.sede_atencion """
     
 sql_empleados_2019 =  """
                         SELECT 
@@ -178,6 +185,7 @@ df_autorizaciones = func_process.load_df_server(sql_autorizaciones, 'reportes')
 df_rips = func_process.load_df_server(SQL_RIPS,'reportes')
 df_siniestralidad = func_process.load_df_server(SQL_SINIESTRALIDAD,'reportes')
 df_capita_poblaciones = loadbq.read_data_bigquery(SQL_CAPITA_POBLACIONES, TABLA_BIGQUERY_CAPITA_POBLACIONES)
+df_capita_sedes = loadbq.read_data_bigquery(SQL_CAPITA, TABLA_BIGQUERY_CAPITA)
 empleados = func_process.load_df_server(sql_empleados_2019, 'reportes')
 df_maestra_condicion_salud = func_process.load_df_server(SQL_MAESTRA_CONDICION_SALUD,'analitica')
 df_maestra_ciediez = func_process.load_df_server(SQL_MAESTRA_CIEDIEZ,'analitica')
@@ -227,6 +235,11 @@ laboratorio_bd.fillna('NULL',
 laboratorio_bd.drop(['C. MEDICO','MEDICO'], axis=1, inplace=True)
 laboratorio_bd.rename({'numeroidentificacionremitente':'C. MEDICO','nombreremitente':'MEDICO'}, axis=1,inplace=True)
 
+# SEDE CAPITAS
+laboratorio_bd = laboratorio_bd.merge(df_capita_sedes,
+                                        on='Historia',
+                                        how='left')
+laboratorio_bd['sede_capita'].fillna(laboratorio_bd['SEDE'], inplace=True)
 
 # CARGAMOS ARCHIVO TARIFA COSTO
 tarifa_costo['CODIGO'] = tarifa_costo['CODIGO'].astype('str')
@@ -270,7 +283,7 @@ laboratorio_bd_tarifa_costo_2.SEDE.replace('PRINCIPAL ', 'PRINCIPAL', inplace= T
 laboratorio_bd_tarifa_costo_2.SEDE.replace(['PLAN COMPLEMENTARIO', 'PLAN COMPLEMENTARIO SURA', 'PAC-SURAMERICANA'], 'PAC', inplace= True)
 laboratorio_bd_tarifa_costo_2 = laboratorio_bd_tarifa_costo_2.merge(df_capita_poblaciones, 
                                                                     how='left', 
-                                                                    on='SEDE')
+                                                                    on='codigo_sede')
 
 
 laboratorio_bd_tarifa_costo_2.drop(columns=['FECHA_CAPITA'], axis= 1, inplace= True)
@@ -341,7 +354,7 @@ laboratorio_bd_tarifa_costo_2_rol = laboratorio_bd_tarifa_costo_2_rol[
                          'FECHA_NACIMIENTO', 'EDAD', 'CODIGO', 'PRUEBA', 'RESULTADO', 'UNIDAD',
                          'FECHA', 'EMPRESA', 'SEDE', 'ORDEN_SEDE', 'TELEFONO', 'IMPRESION_DIAGNOSTICA',  
                          'codigoDiagnostico', 'VALORES', 'SEDE_DE_LA_REMISION', 'C_MEDICO', 'MEDICO',
-                         'SECCION', 'TARIFA_COSTO', 'POBLACION_SEDE', 'rol', 'rol_2', 'estado_empleado']
+                         'SECCION', 'TARIFA_COSTO', 'POBLACION_SEDE', 'rol', 'rol_2', 'estado_empleado','nombre_ips','sede_capita']
                     ]
 cumplimientos_pyg = cumplimiento_pyg_sedes.merge(cumplimiento_pyg_coopsana,
                                                 how='inner',
@@ -376,8 +389,9 @@ df_laboratorio_ciediez.rename({'nombre':'IMPRESION_DIAGNOSTICA'}, axis=1,inplace
 df_laboratorio_ciediez['SEXO'] = df_laboratorio_ciediez['SEXO'].replace({'F': 'Femenino', 'M': 'Masculino','I':'Indefinido'})
 # Nombre medicos en mayuscula
 df_laboratorio_ciediez['MEDICO'] = df_laboratorio_ciediez['MEDICO'].str.upper()
+print(df_laboratorio_ciediez.columns)
 # Poblacion coopsana    
-df_laboratorio_ciediez['poblacionCoopsana'] = df_capita_poblaciones[df_capita_poblaciones.SEDE == 'COOPSANA IPS' ]['POBLACION_TOTAL'].values[0]
+df_laboratorio_ciediez['poblacionCoopsana'] = df_capita_poblaciones[df_capita_poblaciones.nombre_ips == 'COOPSANA IPS' ]['POBLACION_TOTAL'].values[0]
 # Atendidos mes capita
 df_laboratorio_rips = df_laboratorio_ciediez.merge(df_rips, how='left', 
                                                     left_on=['HISTORIA','C_MEDICO'],
@@ -402,13 +416,14 @@ df_laboratorio_condicion_salud['cumplimiento_pyg_sedes_totales'] = 0
 df_laboratorio_condicion_salud['cumplimiento_pyg'].fillna(0, inplace=True)
 df_laboratorio_condicion_salud['cumplimiento_pyg_coopsana'].fillna(0, inplace=True)
 
+# Add columnas capita
+df_laboratorio_condicion_salud['fecha_capita'] = capita_date
+
 # Seleccionar columnas necesarias
 df_laboratorio_load = df_laboratorio_condicion_salud[COLUMNS_REQUIRED]
 df_laboratorio_load = convert_column_string(df_laboratorio_load)
 
-
 # VALIDATE LOAD
 validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY_LABORATORIO_CLINICO)
-
 # Load
 validate_load(validate_loads_logs,df_laboratorio_load,TABLA_BIGQUERY_LABORATORIO_CLINICO,TABLA_MARIADB)
