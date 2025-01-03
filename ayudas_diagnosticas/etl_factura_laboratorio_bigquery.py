@@ -93,8 +93,7 @@ SQL_CAPITA_POBLACIONES = f"""
                 codigo_ips as codigo_sede,
             POBLACION_TOTAL
                 FROM `ia-bigquery-397516.pacientes.capitas_poblaciones`
-                WHERE extract(year from FECHA_CAPITA) = {year}   
-                AND FECHA_CAPITA = (SELECT  max(FECHA_CAPITA) FROM `ia-bigquery-397516.pacientes.capitas_poblaciones`)
+                WHERE FECHA_CAPITA = (SELECT  max(FECHA_CAPITA) FROM `ia-bigquery-397516.pacientes.capitas_poblaciones`)
     """
 
 SQL_CAPITA = """SELECT cc.identificacion_paciente as Historia,ms.codigo_sede,ms.nombre_sede as sede_capita
