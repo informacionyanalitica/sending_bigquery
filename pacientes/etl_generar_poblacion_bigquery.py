@@ -322,6 +322,7 @@ df_poblacion_final = df_may_2.merge(
 
 # RENAME COLUMNS
 df_poblacion_final.columns = COLUMNS_REQUIRED
+
 # Cargar a bigquery
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES_NUEVOS)
 validate_load(validate_loads_logs,df_poblacion_final)
