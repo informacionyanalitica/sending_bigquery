@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import sys,os 
 from dotenv import load_dotenv
-
+from datetime import datetime
 # Carga el archivo .env
 load_dotenv()
 
@@ -12,11 +12,14 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
-SQL_ODONTOLOGIA_DATOS_VIEW = """SELECT *
+today = datetime.now()
+date_load = today.dt.date()
+
+SQL_ODONTOLOGIA_DATOS_VIEW = f"""SELECT *
                     FROM reportes.datos_rips_odontologia_view AS r
                     WHERE r.fecha_consulta 
-                        BETWEEN DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY)
-            AND DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) + 1 DAY), INTERVAL 7 DAY);
+                        BETWEEN DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY)
+                  AND DATE_ADD(DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY), INTERVAL 7 DAY);
                 """
 
 SQL_BIGQUERY = """
@@ -41,6 +44,15 @@ def convert_dates(df):
     df.hora_finaliza_cita = [row.replace('0 days ','') for row in df.hora_finaliza_cita]
     return df
 
+def validate_load(df_validate_load,df_load):
+    try:
+        total_cargue = df_validate_load.totalCargues[0]
+        if  total_cargue == 0:
+            # Cargar bigquery
+            loadbq.load_data_bigquery(df_load,TABLA_BIGQUERY)
+    except ValueError as err:
+        print(err)
+
 # Leer datos
 df_datos_odontologia_bd = func_process.load_df_server(SQL_ODONTOLOGIA_DATOS_VIEW, 'reportes')   
 
@@ -52,4 +64,6 @@ valores_unicos = tuple(map(str, df_datos_odontologia_bd[validator_column]))
 df_datos_odontologia_not_duplicates = loadbq.rows_not_duplicates(df_datos_odontologia_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
 
 # Save data
-loadbq.load_data_bigquery(df_datos_odontologia_not_duplicates,TABLA_BIGQUERY)
+df_validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
+validate_load(df_validate_loads_logs,df_datos_odontologia_not_duplicates)
+

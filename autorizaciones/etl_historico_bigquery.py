@@ -8,11 +8,14 @@ sys.path.insert(1,path)
 import func_process
 import load_bigquery as loadbq
 
+today = datetime.now()
+date_load = today.dt.date()
 
-SQL_AUTORIZACIONES_BD = """SELECT *
-                FROM reportes.autorizacionesTemporal as f
-                where date(f.fechaImpresion) BETWEEN  '2024-10-07' and '2024-10-13'
-            
+SQL_AUTORIZACIONES_BD = f"""SELECT *
+                FROM reportes.autorizacionesView as f
+                where date(f.fechaImpresion) 
+                    BETWEEN DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY)
+                  AND DATE_ADD(DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY), INTERVAL 7 DAY);
                 """
                 
 SQL_BIGQUERY = """
@@ -58,8 +61,17 @@ def get_rows_not_duplicate(df_autorizaciones):
     except Exception as er:
         print(er)
 
-# Obtener datos no duplicados
-df_pagos_not_duplicates = get_rows_not_duplicate(df_autorizaciones_bd)
+def validate_load(df_validate_load,df_load):
+    try:
+        total_cargue = df_validate_load.totalCargues[0]
+        if  total_cargue == 0:
+            # Cargar bigquery
+            loadbq.load_data_bigquery(df_load,TABLA_BIGQUERY)
+    except ValueError as err:
+        print(err)
+
 
 # Save data
-loadbq.load_data_bigquery(df_pagos_not_duplicates,TABLA_BIGQUERY)
+df_validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
+validate_load(df_validate_loads_logs,df_autorizaciones_bd)
+
