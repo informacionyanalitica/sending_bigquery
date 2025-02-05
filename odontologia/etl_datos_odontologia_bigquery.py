@@ -13,7 +13,7 @@ import func_process
 import load_bigquery as loadbq
 
 today = datetime.now()
-date_load = today.dt.date()
+date_load = today.date()
 
 SQL_ODONTOLOGIA_DATOS_VIEW = f"""SELECT *
                     FROM reportes.datos_rips_odontologia_view AS r

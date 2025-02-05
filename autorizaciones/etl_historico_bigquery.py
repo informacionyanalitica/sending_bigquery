@@ -9,7 +9,7 @@ import func_process
 import load_bigquery as loadbq
 
 today = datetime.now()
-date_load = today.dt.date()
+date_load = today.date()
 
 SQL_AUTORIZACIONES_BD = f"""SELECT *
                 FROM reportes.autorizacionesView as f
