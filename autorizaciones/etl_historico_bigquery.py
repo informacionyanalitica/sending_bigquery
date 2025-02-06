@@ -14,8 +14,8 @@ date_load = today.date()
 SQL_AUTORIZACIONES_BD = f"""SELECT *
                 FROM reportes.autorizacionesView as f
                 where date(f.fechaImpresion) 
-                    BETWEEN DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY)
-                  AND DATE_ADD(DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY), INTERVAL 7 DAY);
+                    BETWEEN DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY)
+                  AND DATE_ADD(DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY), INTERVAL 7 DAY);
                 """
                 
 SQL_BIGQUERY = """

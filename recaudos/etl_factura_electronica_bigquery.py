@@ -27,6 +27,9 @@ SQL_FE_VIEW = f"""
             FROM reportes.facturasElectronicasView AS fe
             WHERE DATE(fe.fechaFactura) ='{date_load}'
         """
+LIST_COLUMNS_STRING = ['idItemFactura','idPago']
+LIST_COLUMNS_DATE = ['fechaFactura','fechaCreacionNotaCredito']
+LIST_COLUMNS_INT = ['cantidad','precio','valorTotal']
 
 def validate_load(df_validate_load,df_load):
     try:
@@ -39,13 +42,10 @@ def validate_load(df_validate_load,df_load):
         
 df_factura_electronica = func_process.load_df_server(SQL_FE_VIEW,'reportes')
 # Convertir columnas string
-LIST_COLUMNS_STRING = ['idItemFactura','idPago']
 df_factura_electronica = convert_columns.convert_columns_string(df_factura_electronica,LIST_COLUMNS_STRING)
 # Convertir columnas int
-LIST_COLUMNS_INT = ['cantidad','precio','valorTotal']
 df_factura_electronica = convert_columns.convert_columns_integer(df_factura_electronica,LIST_COLUMNS_INT)
 # Convertir columnas date
-LIST_COLUMNS_DATE = ['fechaFactura','fechaCreacionNotaCredito']
 df_factura_electronica = convert_columns.convert_columns_date(df_factura_electronica,LIST_COLUMNS_DATE)
 # Guardar datos
 df_validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY)
