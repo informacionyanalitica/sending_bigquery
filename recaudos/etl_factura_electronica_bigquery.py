@@ -3,6 +3,9 @@ import sys,os
 from datetime import datetime,timedelta
 from dotenv import load_dotenv
 
+# Carga el archivo .env
+load_dotenv()
+
 PATH_TOOLS = os.environ.get("PATH_TOOLS")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1, path)
@@ -10,8 +13,6 @@ import func_process
 import load_bigquery as loadbq
 from convert_columns_dataframe import convertColumnDataFrame
 
-# Carga el archivo .env
-load_dotenv()
 
 today = datetime.now()
 date_load = today.date()
