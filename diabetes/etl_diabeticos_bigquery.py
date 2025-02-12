@@ -27,8 +27,9 @@ mes_a = (fecha_capita - func_process.np.timedelta64(31,'D')).strftime('%B').lowe
 fecha_six = (fecha - func_process.np.timedelta64(152,'D')).strftime('%Y-%m-%d')
 fecha_seven = (fecha - func_process.np.timedelta64(212,'D'))
 fecha_seven = pd.to_datetime((fecha_seven + func_process.np.timedelta64(1,'D')).strftime('%Y-%m-%d'))
-fecha_last_year = (fecha - func_process.np.timedelta64(365,'D')).strftime('%Y-%m-%d')
+fecha_last_year = pd.to_datetime((fecha - func_process.np.timedelta64(365,'D')).strftime('%Y-%m-%d'))
 fecha_f = str(fecha.year)+'-'+str('{:02}'.format(fecha.month))+'-'+str(fecha.days_in_month)
+
 
 # Parameters Bigquery
 project_id_product = 'ia-bigquery-397516'
@@ -401,7 +402,7 @@ def validacion_examenes_hb1ac(df_diabeticos_hb1Ac):
         
         
 # Read data
-diabeticos_mes_anterior = func_process.pd.read_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_capita.year}.csv",
+diabeticos_mes_anterior = func_process.pd.read_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_last_year.year}.csv",
                                                     delimiter=';', 
                                                     dtype = {"identificacion_paciente" : "object"})
 
