@@ -15,11 +15,12 @@ import load_bigquery as loadbq
 today = datetime.now()
 date_load = today.date()
 
+
 SQL_ODONTOLOGIA_DATOS_VIEW = f"""SELECT *
                     FROM reportes.datos_rips_odontologia_view AS r
                     WHERE r.fecha_consulta 
-                        BETWEEN DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY)
-                  AND DATE_ADD(DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY), INTERVAL 7 DAY);
+                        BETWEEN DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY)
+                  AND DATE_ADD(DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY), INTERVAL 7 DAY);
                 """
 
 SQL_BIGQUERY = """
