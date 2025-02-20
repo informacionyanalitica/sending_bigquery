@@ -151,12 +151,11 @@ def validate_load(df_validate_load,df_load):
         print(err)
 
 df_file = read_capita(year_load,month_load)
-print(df_file)
 df_capita_validation = validation_columns(df_file)
 df_capita_convert = convert_column_string(df_capita_validation)
 df_capita_convert = convert_date(df_capita_convert)
 df_capita_rename = rename_column(df_capita_convert)
-df_capita_rename['fecha_capita'] = date_capita
+df_capita_rename['fecha_capita'] = pd.to_datetime(date_capita)
 df_capita_rename = convert_string_force(df_capita_rename)
 
 # Save data

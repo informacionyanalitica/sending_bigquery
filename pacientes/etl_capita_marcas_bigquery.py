@@ -70,7 +70,7 @@ capita_mes = func_process.pd.read_csv(f'{path}/POBLACION EPS SURA {name_month}.t
                                    low_memory=False,                        
                                    encoding='UTF-8'
                                    )
-marca_insulina = func_process.pd.read_excel(f'{path_insulina}/Marca_insulina.xlsx',
+marca_insulina = func_process.pd.read_excel(f'{path_insulina}/marca_insulina.xlsx',
                                             dtype= {'ID':'str'},
                                             ).dropna(axis=1)
 
@@ -90,5 +90,6 @@ capita_mes.sw_insulina = capita_mes.sw_insulina.astype(int)
 # Convert column String 
 capita_mes.sede_atencion = capita_mes.sede_atencion.astype(str)
 # Save data
+
 df_validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
 validate_load(df_validate_loads_logs,capita_mes)
