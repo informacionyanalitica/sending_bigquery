@@ -45,12 +45,14 @@ capita_columns= ['tipo_identificacion', 'identificacion_paciente',
         'sw_traslado_sura','celular','direccion','email','fecha_nacimiento','mes_cargue','fecha_cargue']
 
 name_month = today.strftime('%B').upper()
+name_month_capitalize = today.strftime('%B').capitalize()
 year = today.strftime('%Y')
 num_month = today.strftime('%m')
 format_string = "%Y%m%d"
+
 # Path file
 path = f"{PATH_DRIVE}/Scripts PYTHON/CAPITA/csv_in/{year}"
-path_insulina = f"{PATH_DRIVE}/Migracion Dropbox/Marcas de Riesgo/{year}/{int(num_month)}. {name_month}"
+path_insulina = f"{PATH_DRIVE}/Migracion Dropbox/Marcas de Riesgo/{year}/{int(num_month)}.{name_month_capitalize}"
 
 def validate_load(df_validate_load,df_load):
     try:
@@ -91,5 +93,7 @@ capita_mes.sw_insulina = capita_mes.sw_insulina.astype(int)
 capita_mes.sede_atencion = capita_mes.sede_atencion.astype(str)
 # Save data
 
-df_validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
-validate_load(df_validate_loads_logs,capita_mes)
+print(capita_mes)
+
+#df_validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
+#validate_load(df_validate_loads_logs,capita_mes)
