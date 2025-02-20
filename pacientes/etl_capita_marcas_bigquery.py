@@ -93,7 +93,5 @@ capita_mes.sw_insulina = capita_mes.sw_insulina.astype(int)
 capita_mes.sede_atencion = capita_mes.sede_atencion.astype(str)
 # Save data
 
-print(capita_mes)
-
-#df_validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
-#validate_load(df_validate_loads_logs,capita_mes)
+df_validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY)
+validate_load(df_validate_loads_logs,capita_mes)
