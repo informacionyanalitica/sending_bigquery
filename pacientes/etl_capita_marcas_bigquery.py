@@ -52,7 +52,7 @@ format_string = "%Y%m%d"
 
 # Path file
 path = f"{PATH_DRIVE}/Scripts PYTHON/CAPITA/csv_in/{year}"
-path_insulina = f"{PATH_DRIVE}/Migracion Dropbox/Marcas de Riesgo/{year}/{int(num_month)}.{name_month_capitalize}"
+path_insulina = f"{PATH_DRIVE}/Migracion Dropbox/Marcas de Riesgo/{year}/{int(num_month)}. {name_month_capitalize}"
 
 def validate_load(df_validate_load,df_load):
     try:
