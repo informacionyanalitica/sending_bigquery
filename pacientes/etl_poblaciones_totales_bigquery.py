@@ -76,6 +76,8 @@ COLUMNS_REQUIRED = ['fecha_capita', 'nombre_ips', 'codigo_ips', 'poblacion_total
        'mujeres_mayores_igual_18_anos', 'menores_a_41_anos',
        'menores_a_3_anos', 'mayores_de_64_anos']
 
+
+
 # Funcion para cargar cada archivo TXT de capita
 def load_branch(path_capita, file):
     branch = func_process.pd.read_csv(f"{path_capita}/{file}", sep=",", dtype={1:'object', 13:'object'}, encoding = "ISO-8859-1")
@@ -144,6 +146,7 @@ def convert_columns_integer(df):
         return df
     except Exception as err:
         print(err)
+       
 
 # Sustituimos el nombre de cada sede por el que usanos frecuentemente
 def subtitute_name_branch(capita):
@@ -188,7 +191,9 @@ capita = (
     load_capita()
     .pipe(subtitute_name_branch)
     .pipe(codigo_ips)
+    
 )
+
 
 capita["FECHA NACIMIENTO"] = func_process.pd.to_datetime(capita["FECHA NACIMIENTO"], format=format_string)
 #invocamos la funcion en la columna  EDAD ANOS que estamos insertando
@@ -361,9 +366,11 @@ CAPITA_POBLACIONES.rename({'menores_o_igual_de_40_anos':'menores_a_41_anos'}, ax
 CAPITA_POBLACIONES.rename({'menores_o_igual_de_2_anos':'menores_a_3_anos'}, axis=1,inplace=True)
 CAPITA_POBLACIONES.rename({'menores_de_16_anos':'menores_a_16_anos'}, axis=1,inplace=True)
 
+CAPITA_POBLACIONES.fecha_capita  = pd.to_datetime(CAPITA_POBLACIONES.fecha_capita)
 # ELGIR EL ORDEN DE LAS COLUMNAS REQUERIDAS
 CAPITA_POBLACIONES = CAPITA_POBLACIONES[COLUMNS_REQUIRED]
 
 # Cargar a bigquery
 validate_loads_logs =  loadbq.validate_loads_monthly(TABLA_BIGQUERY_POBLACIONES)
 validate_load(validate_loads_logs,CAPITA_POBLACIONES)
+
