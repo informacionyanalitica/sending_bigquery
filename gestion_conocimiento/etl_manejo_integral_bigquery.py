@@ -16,11 +16,11 @@ import load_bigquery as loadbq
 
 
 COLUMNS_REQUIRED = ['fecha','fecha_realizo_auditoria','mes','ano','examen_monitorear','tipo_examen','sede','rol_profesional','nombre_profesional',
- 'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','interrogatorio_medico_completo',
+ 'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','adherencia_previo_prescripcion_adecuada',
  'adherencia_tratamiento_medicamentoso_actual','examen_fisico_completo_adecuado','ayudas_dx_acorde_condicion_salud',
  'recomendaciones_entregadas_acorde_guias_protocolos','maneja_paciente_manera_integral','condicion_salud_manejo_segun_guia',
- 'paciente_reconsultar_urgencias_hospitalizacion','remision_o_CCE_alguna_especializacion','gestion_paraclinicos_solicitados',
- 'referencia_contrareferencia_adecuada','analisis_plan','pertinencia','nota','observaciones','datos_completos']
+ 'paciente_reconsultar_urgencias_hospitalizacion','resolvio_enfoque_integral','remision_o_CCE_alguna_especializacion','gestion_paraclinicos_solicitados',
+ 'referencia_contrareferencia_adecuada','reconsulta_causa_administrativa','analisis_plan','pertinencia','nota','observaciones','datos_completos']
 
 
 # DETALLE DATASET BIGQUERY
@@ -76,9 +76,8 @@ def drop_rows_empty(df):
         print(err)
 
 
-def validate_load(df_load_log,df_not_duplicate):
-    total_cargues = df_load_log.totalCargues[0]
-    if total_cargues==0:
+def validate_load(df_not_duplicate):
+    if df_not_duplicate.shape[0]>0:
         try:
             # Load bigquery
             loadbq.load_data_bigquery(df_not_duplicate,TABLA_BIGQUERY,'WRITE_TRUNCATE')
@@ -96,9 +95,10 @@ def execution_load():
             df_auditor_transform = convert_number(df_auditor_clean)
             df_auditor_transform['auditor'] = name
             df_auditores = pd.concat([df_auditores,df_auditor_transform])
+
         # VALIDATE DATA
-        validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
-        validate_load(validate_loads_logs,df_auditores)
+
+        validate_load(df_auditores)
     except Exception as err:
         print(err)
 
