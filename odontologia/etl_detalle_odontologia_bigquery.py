@@ -18,8 +18,8 @@ date_load = today.date()
 SQL_ODONTOLOGIA_DETALLE_VIEW = f"""SELECT *
                     FROM reportes.detalle_rips_odontologia_view AS r
                     WHERE r.fecha_consulta 
-                        BETWEEN DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY)
-                  AND DATE_ADD(DATE_SUB({date_load}, INTERVAL WEEKDAY({date_load}) + 8 DAY), INTERVAL 7 DAY);
+                        BETWEEN DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY)
+                  AND DATE_ADD(DATE_SUB('{date_load}', INTERVAL WEEKDAY('{date_load}') + 8 DAY), INTERVAL 7 DAY);
                 """
             
 #df_odontologia_detalle_view = func_process.load_df_server(SQL_ODONTOLOGIA_DETALLE_VIEW, 'reportes')  
@@ -64,6 +64,8 @@ df_detalle_odontologia_bd = convert_dates(df_detalle_odontologia_bd)
 # Obtener datos no duplicados
 valores_unicos = tuple(map(int, df_detalle_odontologia_bd[validator_column]))
 df_detalle_odontologia_not_duplicates = loadbq.rows_not_duplicates(df_detalle_odontologia_bd,validator_column,SQL_BIGQUERY,TABLA_BIGQUERY,valores_unicos)
+
+
 
 # Save data
 df_validate_loads_logs =  loadbq.validate_loads_weekly(TABLA_BIGQUERY)
