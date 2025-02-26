@@ -15,14 +15,16 @@ import load_bigquery as loadbq
 
 
 
+
+
 COLUMNS_REQUIRED = ['fecha','fecha_realizo_auditoria','mes','ano','examen_monitorear','tipo_examen','sede','rol_profesional','nombre_profesional',
- 'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','adherencia_previo_prescripcion_adecuada',
- 'adherencia_tratamiento_medicamentoso_actual','examen_fisico_completo_adecuado','ayudas_dx_acorde_condicion_salud',
+ 'cedula','historia_clinica','condicion_salud','dx','percentil_riesgo','antecedentes_personales_gestion_de_caso','interrogatorio_medico_completo',
+ 'adherencia_previo_prescripcion_adecuada','examen_fisico_completo_adecuado','ayudas_dx_acorde_condicion_salud',
  'recomendaciones_entregadas_acorde_guias_protocolos','maneja_paciente_manera_integral','condicion_salud_manejo_segun_guia',
  'paciente_reconsultar_urgencias_hospitalizacion','resolvio_enfoque_integral','remision_o_CCE_alguna_especializacion','gestion_paraclinicos_solicitados',
- 'referencia_contrareferencia_adecuada','reconsulta_causa_administrativa','analisis_plan','pertinencia','nota','observaciones','datos_completos']
+ 'referencia_contrareferencia_adecuada','reconsulta_causa_administrativa','nota','observaciones','datos_completos']
 
-
+LIST_COLUMN_DROP = ['Envío de Correo','Analisis y plan', 'Pertinencia']
 # DETALLE DATASET BIGQUERY
 project_id_product = 'ia-bigquery-397516'
 dataset_id_gestion_conocimiento = 'gestion_conocimiento'
@@ -61,7 +63,7 @@ def convert_number(df):
 
 def get_columns_rows(df):
     try:
-        df.drop(['Envío de Correo'], axis=1, inplace=True)
+        df.drop(LIST_COLUMN_DROP, axis=1, inplace=True)
         df.columns = COLUMNS_REQUIRED
         return df
     except Exception as err:
@@ -97,7 +99,6 @@ def execution_load():
             df_auditores = pd.concat([df_auditores,df_auditor_transform])
 
         # VALIDATE DATA
-
         validate_load(df_auditores)
     except Exception as err:
         print(err)
