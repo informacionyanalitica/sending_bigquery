@@ -13,6 +13,7 @@ PATH_TOOLS = os.environ.get("PATH_TOOLS")
 PATH_DRIVE = os.environ.get("PATH_DRIVE")
 path = os.path.abspath(PATH_TOOLS)
 sys.path.insert(1,path)
+
 import func_process
 import load_bigquery as loadbq
 
@@ -402,7 +403,7 @@ def validacion_examenes_hb1ac(df_diabeticos_hb1Ac):
         
         
 # Read data
-diabeticos_mes_anterior = func_process.pd.read_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_last_year.year}.csv",
+diabeticos_mes_anterior = func_process.pd.read_csv(f"{PATH_DRIVE}/Scripts PYTHON/INDICADORES RCV/CSV_in/diabeticos_{mes_a}_{fecha_capita.year}.csv",
                                                     delimiter=';', 
                                                     dtype = {"identificacion_paciente" : "object"})
 
@@ -835,5 +836,4 @@ detalle_df_save = pd.DataFrame({
 # Save data Hb1Ac_70
 df_Hb1Ac_last_date_70_no_telemedicina_no_presenciales.to_excel(f"Hb1Ac_70_{mes}.xlsx", index=False)
 execution_load(detalle_df_save)
-
 
