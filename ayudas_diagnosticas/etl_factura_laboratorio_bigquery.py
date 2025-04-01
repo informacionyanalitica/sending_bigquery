@@ -215,6 +215,7 @@ df_autorizaciones[['Historia', 'CODIGO', 'ORDEN_SEDE', 'codigoDiagnostico','nume
 df_autorizaciones = df_autorizaciones[['Historia', 'CODIGO', 'ORDEN_SEDE', 'codigoDiagnostico','numeroidentificacionremitente','nombreremitente']]
 empleados['identificacion'] = empleados['identificacion'].astype('str')
 
+
 laboratorio_bd = bd.merge(df_autorizaciones,
                                         on=['Historia', 'CODIGO','ORDEN_SEDE'], 
                                         how='left')
@@ -422,7 +423,26 @@ df_laboratorio_condicion_salud['fecha_capita'] = capita_date
 df_laboratorio_load = df_laboratorio_condicion_salud[COLUMNS_REQUIRED]
 df_laboratorio_load = convert_column_string(df_laboratorio_load)
 
+columnas_unicas = [
+    'ORDEN',         # Verifica si se llama 'ORDEN' o 'ORDEN_SEDE'
+    'HISTORIA', 
+    'CODIGO', 
+    'PRUEBA', 
+    'RESULTADO',
+    'FECHA'          # Agrega fecha si hay múltiples pruebas el mismo día
+]
+
+# Filtra solo las columnas que existen
+columnas_existentes = [col for col in columnas_unicas if col in df_laboratorio_load.columns]
+#print("Columnas a usar para identificación única:", columnas_existentes)
+
+# Elimina duplicados usando las columnas correctas
+df_laboratorio_load_final = df_laboratorio_load.drop_duplicates(
+    subset=columnas_existentes,
+    keep='first'  # Mantiene la primera ocurrencia
+)
+
 # VALIDATE LOAD
 validate_loads_logs =  loadbq.validate_loads_daily(TABLA_BIGQUERY_LABORATORIO_CLINICO)
 # Load
-validate_load(validate_loads_logs,df_laboratorio_load,TABLA_BIGQUERY_LABORATORIO_CLINICO,TABLA_MARIADB)
+validate_load(validate_loads_logs,df_laboratorio_load_final,TABLA_BIGQUERY_LABORATORIO_CLINICO,TABLA_MARIADB)
