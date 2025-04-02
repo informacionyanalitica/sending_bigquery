@@ -71,11 +71,20 @@ def get_columns_rows(df):
 
 def drop_rows_empty(df):
     try:
-        list_index_drop = df[(df.fecha == '') & (df.examen_monitorear == '')].index[0]
-        df = df.iloc[:list_index_drop]
+        # Verificar si el DataFrame está vacío
+        if df.empty:
+            print("El DataFrame está vacío, no se puede procesar.")
+            return df
+        
+        # Filtrar filas donde 'fecha' y 'examen_monitorear' estén vacías
+        mask = (df['fecha'] == '') & (df['examen_monitorear'] == '')
+        if mask.any():  # Si hay al menos una fila que cumpla la condición
+            list_index_drop = df[mask].index[0]  # Tomar el primer índice
+            df = df.iloc[:list_index_drop]  # Mantener solo las filas antes de ese índice
         return df
     except Exception as err:
-        print(err)
+        print(f"Error en drop_rows_empty: {err}")
+        return df
 
 
 def validate_load(df_not_duplicate):
@@ -100,6 +109,7 @@ def execution_load():
 
         # VALIDATE DATA
         validate_load(df_auditores)
+        
     except Exception as err:
         print(err)
 
