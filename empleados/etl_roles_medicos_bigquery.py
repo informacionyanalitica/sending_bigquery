@@ -1,26 +1,15 @@
 import sys
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from numpy import errstate
 import requests
 from google.cloud import bigquery
 import pandas_gbq
-import mysql.connector
-from mysql.connector import Error
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
 load_dotenv()
-
-# ---- Configuración de MariaDB desde .env ----
-MARIADB_CONFIG = {
-    'host': os.getenv('DB_HOST_TRANSACTION'),
-    'port': int(os.getenv('DB_PORT_TRANSACTION', 3306)),
-    'user': os.getenv('DB_USER_TRANSACTION'),
-    'password': os.getenv('DB_PASSWORD_TRANSACTION'),
-    'database': 'analitica'
-}
 
 # ---- Funciones de Google Drive y Sheets ----
 def getIdsGoogleSheet(path_folder):
@@ -61,65 +50,6 @@ def readFile(id, namePage="Hoja 1"):
     except ValueError as err:
         print(f"Error al procesar JSON: {err}")
         return None
-
-# ---- Funciones para MariaDB ----
-def connect_mariadb():
-    """Conecta a MariaDB y retorna la conexión"""
-    try:
-        connection = mysql.connector.connect(**MARIADB_CONFIG)
-        if connection.is_connected():
-            print(f"✓ Conexión exitosa a MariaDB: {MARIADB_CONFIG['database']}")
-            return connection
-    except Error as e:
-        print(f"✗ Error al conectar a MariaDB: {e}")
-        return None
-
-def insert_mariadb(df, table_name, connection):
-    """Borra datos antiguos e inserta nuevos datos en MariaDB"""
-    try:
-        cursor = connection.cursor()
-        
-        # 1. Borrar datos existentes
-        delete_query = f"DELETE FROM {table_name}"
-        cursor.execute(delete_query)
-        print(f"✓ Datos antiguos eliminados de {table_name}")
-        
-        # 2. Preparar INSERT
-        columns = ', '.join(df.columns)
-        placeholders = ', '.join(['%s'] * len(df.columns))
-        insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
-        
-        # 3. Insertar datos fila por fila
-        rows_inserted = 0
-        for index, row in df.iterrows():
-            values = []
-            for value in row:
-                if pd.isna(value):
-                    values.append(None)
-                elif isinstance(value, datetime):
-                    values.append(value.strftime('%Y-%m-%d %H:%M:%S'))
-                else:
-                    values.append(str(value))
-            
-            cursor.execute(insert_query, tuple(values))
-            rows_inserted += 1
-        
-        # 4. Confirmar transacción
-        connection.commit()
-        print(f"✓ {rows_inserted} filas insertadas en {table_name}")
-        
-        # 5. Verificar el conteo final
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        count = cursor.fetchone()[0]
-        print(f"✓ Total de filas en {table_name}: {count}")
-        
-        cursor.close()
-        return True
-        
-    except Error as e:
-        print(f"✗ Error al insertar en MariaDB: {e}")
-        connection.rollback()
-        return False
 
 # ---- Clase Query para BigQuery ----
 class Query:
@@ -163,13 +93,113 @@ class Query:
             print(f"✗ Error en BigQuery: {er}")
             return str(er)
 
+# ---- Función para actualizar laboratorio_clinico_partition ----
+def update_laboratorio_clinico(client, project_id):
+    """
+    Ejecuta todos los updates/merges en laboratorio_clinico_partition
+    usando la fecha máxima de la tabla (se ejecuta después de laboratorio)
+    """
+    try:
+        # MERGE 1: Actualizar MEDICO
+        merge_medico = f"""
+        MERGE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition` AS l
+        USING (
+            SELECT identificacion, nombre
+            FROM `{project_id}.empleados.activos_ultimos_meses_view`
+        ) AS s
+        ON l.C_MEDICO = s.identificacion
+        WHEN MATCHED AND DATE(l.FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`) THEN
+            UPDATE SET l.MEDICO = CAST(s.nombre AS STRING)
+        """
+        print(f"  Ejecutando MERGE 1: Actualizar MEDICO...")
+        client.query(merge_medico).result()
+        print(f"  ✓ MERGE 1 completado")
+        
+        # MERGE 2: Actualizar rol
+        merge_rol = f"""
+        MERGE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition` AS l
+        USING (
+            SELECT identificacion_med, rol
+            FROM `{project_id}.empleados.roles`
+            QUALIFY ROW_NUMBER() OVER (PARTITION BY identificacion_med ORDER BY rol) = 1
+        ) AS s
+        ON l.C_MEDICO = s.identificacion_med
+        WHEN MATCHED AND DATE(l.FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`) THEN
+            UPDATE SET l.rol = s.rol
+        """
+        print(f"  Ejecutando MERGE 2: Actualizar rol...")
+        client.query(merge_rol).result()
+        print(f"  ✓ MERGE 2 completado")
+        
+        # UPDATE 1: Normalizar valores
+        update_normalize = f"""
+        UPDATE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition` AS l
+        SET l.rol = CASE
+            WHEN l.rol IN ('RIAS ', ' RIAS') THEN 'RIAS'
+            WHEN l.rol IN ('Planificación Familiar', 'Planificacion', ' Planificación Familiar', 'Planificacion Familiar') THEN 'Planificación familiar'
+            WHEN l.rol IN ('Medico gestor', 'Médico Gestor') THEN 'Medico Gestor'
+            WHEN l.rol IN ('Ninguna', '') THEN 'Otro'
+            ELSE l.rol
+        END
+        WHERE l.rol IN ('RIAS ', ' RIAS', 'Planificación Familiar', 'Planificacion', ' Planificación Familiar', 'Planificacion Familiar', 'Medico gestor', 'Médico Gestor', 'Ninguna', '')
+        AND DATE(FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`)
+        """
+        print(f"  Ejecutando UPDATE 1: Normalizar rol...")
+        client.query(update_normalize).result()
+        print(f"  ✓ UPDATE 1 completado")
+
+        # UPDATE 1.1: Cambiar a 'Consulta externa'
+        update_consulta_externa = f"""
+        UPDATE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`
+        SET rol = 'Consulta externa'
+        WHERE rol IN ('Supernumeraria', 'Médico Gestor', 'Medico Gestor')
+        AND DATE(FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`)
+        """
+        print(f"  Ejecutando UPDATE 1.1: Cambiar a 'Consulta externa'...")
+        client.query(update_consulta_externa).result()
+        print(f"  ✓ UPDATE 1.1 completado")
+
+        # UPDATE 2: Establecer ESPECIALISTA
+        update_especialista = f"""
+        UPDATE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`
+        SET rol = 'ESPECIALISTA'
+        WHERE rol = 'Otro'
+        AND TRIM(cargo_gestal) IN (
+            'MEDICO CIRUJANO','MEDICO CIRUJANO PLASTICO','MEDICO DEPORTOLOGO','MEDICO DERMATOLOGO',
+            'MEDICO INTERNISTA','MEDICO LIDER REUMATOLOGIA','MEDICO ORTOPEDISTA','MEDICO OTORRINOLARINGOLOGO',
+            'MEDICO PEDIATRA','MEDICO RADIOLOGO','MEDICO UROLOGO','DERMATOLOGA','REUMATOLOGO','NEUROLOGO',
+            'REUMATÓLOGO INFANTIL','HEPATOLOGA','ANESTESIOLOGO','PSIQUIATRA','UROLOGO',
+            'ESPECIALISTA EN CIRUGIA VASCULAR','MEDICO GINECOBSTETRA','ENDOCRINO'
+        )
+        AND DATE(FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`)
+        """
+        print(f"  Ejecutando UPDATE 2: Establecer ESPECIALISTA...")
+        client.query(update_especialista).result()
+        print(f"  ✓ UPDATE 2 completado")
+
+        # UPDATE 3: Establecer CITOTECNOLOGO
+        update_citotecnologo = f"""
+        UPDATE `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`
+        SET rol = 'CITOTECNOLOGO'
+        WHERE TRIM(cargo_gestal) = 'CITOTECNOLOGA'
+        AND DATE(FECHA) = (SELECT MAX(DATE(FECHA)) FROM `{project_id}.ayudas_diagnosticas.laboratorio_clinico_partition`)
+        """
+        print(f"  Ejecutando UPDATE 3: Establecer CITOTECNOLOGO...")
+        client.query(update_citotecnologo).result()
+        print(f"  ✓ UPDATE 3 completado")
+        
+        print("✓ Todos los updates completados exitosamente")
+        return True
+    except Exception as e:
+        print(f"✗ Error en updates: {e}")
+        return False
+
 # ---- Código principal ----
 def main():
     print("\n" + "="*60)
-    print("CARGA DE ROLES MÉDICOS - GOOGLE SHEETS → MARIADB + BIGQUERY")
+    print("CARGA DE ROLES MÉDICOS - GOOGLE SHEETS → BIGQUERY")
     print("="*60 + "\n")
     
-    # Lista estática de subcarpetas e IDs
     subfolders = [
         {"name": "Avenida Oriental", "id": "1PfWP54HztgDHezRCYgmeEoeIqOhl3cBH-6D5TZI3rmI", "typeFile": "spreadsheet"},
         {"name": "Calasanz", "id": "1y3RWFKUkeCznWPqccEVjUUZjJ3Wb8tnrCawsLWJ30CY", "typeFile": "spreadsheet"},
@@ -181,12 +211,10 @@ def main():
     ]
     
     dfIdGoogleSheet = pd.DataFrame(subfolders, columns=['name', 'id', 'typeFile'])
-    
     hoja = 'BD'
     required_columns = ['identificacion_med', 'nombre_med', 'cargoRoles', 'sedeRol', 
                        'rol', 'rol2', 'sedeHoja', 'observaciones', 'fecha_actualizacion']
     
-    # Función para obtener datos
     def getDfRoles(dataDrive):
         sedesRoles = dataDrive.name
         dfRoles = pd.DataFrame()
@@ -212,29 +240,17 @@ def main():
             dfRoles = dfRoles[required_columns]
         return dfRoles
     
-    # 1. Obtener datos de Google Sheets
+    # 1. Obtener datos
     print("📊 PASO 1: Leyendo datos de Google Sheets...")
     dfRoles = getDfRoles(dfIdGoogleSheet)
-    
     print(f"\n✓ Datos obtenidos: {len(dfRoles)} filas")
-    print(f"✓ Columnas: {list(dfRoles.columns)}")
     
     if dfRoles.empty:
         print("\n⚠ No hay datos para procesar. Finalizando.")
         return
     
-    # 2. Insertar en MariaDB automáticamente
-    print("\n🗄️  PASO 2: Insertando en MariaDB...")
-    connection = connect_mariadb()
-    if connection:
-        insert_mariadb(dfRoles, 'roles_medicos', connection)
-        connection.close()
-        print("✓ Conexión a MariaDB cerrada")
-    else:
-        print("✗ No se pudo conectar a MariaDB, saltando este paso")
-    
-    # 3. Insertar en BigQuery
-    print("\n☁️  PASO 3: Insertando en BigQuery...")
+    # 2. Insertar en BigQuery
+    print("\n☁️  PASO 2: Insertando en BigQuery...")
     try:
         client = bigquery.Client()
         project_id = 'ia-bigquery-397516'
@@ -247,7 +263,11 @@ def main():
         
         table_id = 'roles'
         insertBD = Query(None, dfRoles, 'roles_medicos')
-        result_bigquery = insertBD._insert_bigquery(project_id, dataset_id, table_id)
+        insertBD._insert_bigquery(project_id, dataset_id, table_id)
+        
+        # 3. Ejecutar updates
+        print("\n🔄 PASO 3: Actualizando tabla laboratorio_clinico_partition...")
+        update_laboratorio_clinico(client, project_id)
         
     except Exception as e:
         print(f"✗ Error en BigQuery: {e}")
