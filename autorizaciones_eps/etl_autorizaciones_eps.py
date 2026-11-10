@@ -36,6 +36,7 @@ import time
 import hashlib
 import logging
 import traceback
+import unicodedata
 import uuid
 from datetime import datetime
 
@@ -246,26 +247,57 @@ def limpiar_sura(ruta):
     return salida
 
 
+def normalizar_encabezado(nombre):
+    """Encabezado comparable: sin tildes, minusculas, solo letras/numeros y sin letras repetidas.
+    Asi 'Nombre del afilliado' (con error de digitacion) y 'Nombre del afiliado' son la misma columna."""
+    s = unicodedata.normalize("NFKD", str(nombre)).encode("ascii", "ignore").decode("ascii").lower()
+    s = re.sub(r"[^a-z0-9]", "", s)
+    return re.sub(r"(.)\1+", r"\1", s)
+
+
+def selector_columnas(df, eps):
+    """Devuelve col(*nombres): la primera columna del archivo que coincida con alguno de los nombres
+    (comparando encabezados normalizados). Si no existe, el error lista las columnas que si trae el archivo."""
+    mapa = {}
+    for c in df.columns:
+        mapa.setdefault(normalizar_encabezado(c), c)
+
+    def col(*nombres):
+        for n in nombres:
+            real = mapa.get(normalizar_encabezado(n))
+            if real is not None:
+                return df[real]
+        raise KeyError(f"{eps}: no se encontro la columna {list(nombres)}. "
+                       f"Columnas del archivo: {[str(c) for c in df.columns]}")
+    return col
+
+
 def limpiar_coosalud(ruta):
     df = pd.read_excel(ruta, sheet_name=0, dtype=str)
-    nombre = df[["Nombre del afilliado", "Segundo Nombre del afiliado",
-                 "Apellido del afiliado", "Segundo apellido del afiliado"]].fillna("").agg(" ".join, axis=1)
-    estado = texto(df["Estado"]).fillna("") + " / " + texto(df["Sub estado"]).fillna("")
+    col = selector_columnas(df, "COOSALUD")
+    partes_nombre = pd.concat([
+        col("Nombre del afiliado", "Primer nombre del afiliado", "Primer nombre"),
+        col("Segundo Nombre del afiliado", "Segundo nombre"),
+        col("Apellido del afiliado", "Primer apellido del afiliado", "Primer apellido"),
+        col("Segundo apellido del afiliado", "Segundo apellido"),
+    ], axis=1)
+    nombre = partes_nombre.fillna("").agg(" ".join, axis=1)
+    estado = texto(col("Estado")).fillna("") + " / " + texto(col("Sub estado", "Subestado")).fillna("")
     salida = pd.DataFrame({
-        "numeroAutorizacion": texto(df["Numero del caso"]),
-        "tipoIdentificacionPaciente": texto(df["Tipo de documento"]),
-        "numeroIdentificacionPaciente": texto(df["Numero de documento"]),
+        "numeroAutorizacion": texto(col("Numero del caso")),
+        "tipoIdentificacionPaciente": texto(col("Tipo de documento")),
+        "numeroIdentificacionPaciente": texto(col("Numero de documento")),
         "nombrePaciente": texto(nombre),
         # El reporte no trae CUPS ni descripcion del servicio: se completan con homologacionServicios
         "estadoOrden": texto(estado.str.strip(" /")),
-        "diagnostico": texto(df["Codigo del diagnostico"]),
-        "categoria": texto(df["Categoria"]),
-        "numeroContrato": texto(df["Numero Contracto"]),
-        "fechaImpresion": a_fecha(df["Fecha de creacion"]),
-        "fechaAtencion": a_fecha(df["Fecha de la Cita"]),
-        "valorCobrar": numero(df["Valor a pagar"]),
-        "regimen": texto(df["Regimen"]),
-        "nombreSucursalPrestador": texto(df["Sede IPS atencion"]),
+        "diagnostico": texto(col("Codigo del diagnostico")),
+        "categoria": texto(col("Categoria")),
+        "numeroContrato": texto(col("Numero Contracto", "Numero Contrato", "Numero del contrato")),
+        "fechaImpresion": a_fecha(col("Fecha de creacion")),
+        "fechaAtencion": a_fecha(col("Fecha de la Cita")),
+        "valorCobrar": numero(col("Valor a pagar")),
+        "regimen": texto(col("Regimen")),
+        "nombreSucursalPrestador": texto(col("Sede IPS atencion")),
         "datosOriginales": datos_originales(df),
     })
     return salida
