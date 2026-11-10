@@ -43,7 +43,7 @@ from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 
 load_dotenv()
 
@@ -156,7 +156,8 @@ def especialidad_desde_descripcion(desc):
     Es solo un valor por defecto: la tabla homologacionServicios tiene prioridad."""
     if not desc:
         return None
-    d = str(desc).upper()
+    # Sin tildes, para que quede igual que las especialidades de homologacionServicios (DERMATOLOGIA, no DERMATOLOGÍA)
+    d = unicodedata.normalize("NFKD", str(desc)).encode("ascii", "ignore").decode("ascii").upper()
     for patron in PATRONES_ESPECIALIDAD:
         m = re.search(patron, d)
         if m:
@@ -273,8 +274,46 @@ def selector_columnas(df, eps):
 
 
 def limpiar_coosalud(ruta):
+    """Coosalud tiene dos reportes:
+    - Formato nuevo (desde nov/2026): NUMEROCASO, NOMBREAFILIADO, CODIGOSERVICIO, DESCRIPCIONSERVICIO...
+      Trae el servicio (CUPS), asi que se homologa igual que las otras EPS.
+    - Formato anterior (oct/2026): Numero del caso, Nombre del afiliado... sin servicio.
+    Se detecta por los encabezados."""
     df = pd.read_excel(ruta, sheet_name=0, dtype=str)
     col = selector_columnas(df, "COOSALUD")
+    encabezados = {normalizar_encabezado(c) for c in df.columns}
+    if normalizar_encabezado("NUMEROCASO") in encabezados:
+        return limpiar_coosalud_nuevo(df, col)
+    return limpiar_coosalud_anterior(df, col)
+
+
+def limpiar_coosalud_nuevo(df, col):
+    codigo = texto(col("CODIGOSERVICIO"))
+    estado = texto(col("ESTADOPROCESO")).fillna("") + " / " + texto(col("SUBESTADOPROCESO")).fillna("")
+    # Vigencia: se cuenta desde la aprobacion; si no esta aprobada todavia, desde la creacion del caso
+    fecha = a_fecha(col("FECHA_APROBACION")).fillna(a_fecha(col("FECHA_CREACION_HORA")))
+    salida = pd.DataFrame({
+        "numeroAutorizacion": texto(col("NUMEROCASO")),
+        "tipoIdentificacionPaciente": tipo_documento(col("TIPODOCUMENTOAFILIADO")),
+        "numeroIdentificacionPaciente": texto(col("NUMERODOCUMENTOAFILIADO")),
+        "nombrePaciente": texto(col("NOMBREAFILIADO")),
+        "codigoServicioEps": codigo,
+        "cups": codigo.where(codigo.str.fullmatch(r"\d{6}", na=False), None),
+        "descripcion": texto(col("DESCRIPCIONSERVICIO")),
+        "cantidad": numero(col("CANTIDADSERVICIO")),
+        "estadoOrden": texto(estado.str.strip(" /")),
+        "diagnostico": texto(col("CODIGODIAGNOSTICO")),
+        "fechaImpresion": fecha,
+        "fechaAtencion": a_fecha(col("FECHACITA")),
+        # VALOR_SERVICIO es la tarifa del servicio, no el copago: valorCobrar queda vacio
+        "regimen": texto(col("REGIMEN")),
+        "nombreSucursalPrestador": texto(col("NOMBRE_IPS_ATENCION")),
+        "datosOriginales": datos_originales(df),
+    })
+    return salida
+
+
+def limpiar_coosalud_anterior(df, col):
     partes_nombre = pd.concat([
         col("Nombre del afiliado", "Primer nombre del afiliado", "Primer nombre"),
         col("Segundo Nombre del afiliado", "Segundo nombre"),
@@ -288,7 +327,7 @@ def limpiar_coosalud(ruta):
         "tipoIdentificacionPaciente": texto(col("Tipo de documento")),
         "numeroIdentificacionPaciente": texto(col("Numero de documento")),
         "nombrePaciente": texto(nombre),
-        # El reporte no trae CUPS ni descripcion del servicio: se completan con homologacionServicios
+        # Este reporte no trae CUPS ni descripcion del servicio: se completan con homologacionServicios
         "estadoOrden": texto(estado.str.strip(" /")),
         "diagnostico": texto(col("Codigo del diagnostico")),
         "categoria": texto(col("Categoria")),
@@ -368,6 +407,25 @@ def cerrar_carga(cnx, id_carga, estado, leidas=None, cargadas=None, error=None, 
 
 def contar_autorizaciones(cnx, eps):
     return cnx.execute(text("SELECT COUNT(*) FROM autorizaciones WHERE eps = :eps"), {"eps": eps}).scalar()
+
+
+# Llave de servicio de las filas que llegaron sin CUPS ni descripcion (md5 de texto vacio)
+LLAVE_SIN_SERVICIO = hashlib.md5(b"").hexdigest()
+
+
+def quitar_filas_sin_servicio(cnx, df, eps):
+    """Si un caso que ya estaba cargado sin servicio (formato anterior de Coosalud) llega ahora con
+    servicio, se borra la fila vieja para que el caso no quede dos veces en la vista."""
+    casos = sorted({str(c) for c, cod in zip(df["numeroAutorizacion"], df["codigoServicioEps"]) if c and cod})
+    borradas = 0
+    for i in range(0, len(casos), 1000):
+        r = cnx.execute(text("""DELETE FROM autorizaciones
+                                WHERE eps = :eps AND llaveServicio = :llave AND codigoServicioEps IS NULL
+                                  AND numeroAutorizacion IN :casos""").bindparams(
+                            bindparam("casos", expanding=True)),
+                        {"eps": eps, "llave": LLAVE_SIN_SERVICIO, "casos": casos[i:i + 1000]})
+        borradas += r.rowcount
+    return borradas
 
 
 def upsert_autorizaciones(cnx, df):
@@ -483,10 +541,14 @@ def procesar_archivo(eng, carpeta_eps, ruta):
             antes = contar_autorizaciones(cnx, eps)
             cargadas = upsert_autorizaciones(cnx, df)
             nuevas = contar_autorizaciones(cnx, eps) - antes
+            reemplazadas = quitar_filas_sin_servicio(cnx, df, eps)
             cerrar_carga(cnx, id_carga, "OK", leidas, cargadas, nuevas=nuevas)
         log.info(f"[{eps}] {archivo} | OK en {time.time() - inicio:.1f}s | leidas {leidas} | "
                  f"descartadas {descartadas} (repetidas o sin documento) | nuevas {nuevas} | "
                  f"actualizadas {cargadas - nuevas} | sin especialidad {int(df['especialidad'].isna().sum())}")
+        if reemplazadas:
+            log.info(f"[{eps}] {archivo} | {reemplazadas} fila(s) anteriores sin servicio reemplazadas "
+                     f"por la version con servicio")
         return "OK", nuevas, cargadas - nuevas
     except Exception as e:
         log.error(f"[{eps}] {archivo} | ERROR en {time.time() - inicio:.1f}s -> {e!r}")
@@ -573,3 +635,7 @@ if __name__ == "__main__":
     resultados = main(sys.argv[1] if len(sys.argv) > 1 else PATH_DRIVE_EPS)
     # Ultima linea de la salida (formato estandar de los ETL: filas , tabla , fecha) -> la toma el DAG para el correo
     print(f"{resultados['FILAS']} , {BASE_DATOS}.autorizaciones , {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
+    # Si algun archivo fallo, la tarea queda en error en Airflow (y llega el correo de falla).
+    # Los archivos con error se reprocesan solos en la siguiente ejecucion.
+    if resultados["ERROR"]:
+        sys.exit(1)
