@@ -188,7 +188,9 @@ def limpiar_sanitas(ruta):
         "numeroIdentificacionPaciente": texto(df["Identificacion Afiliado"]),
         "nombrePaciente": texto(df["Nombre Afiliado"]),
         "codigoServicioEps": codigo,
-        "cups": codigo.where(codigo.str.fullmatch(r"\d{6}", na=False), None),
+        # CUPS: el codigo si es de 6 digitos, o sus 6 primeros digitos si Sanitas le pega letras
+        # (861411PQ = paquete, 890242DEP, 890235NV3). Medicamentos como 45122-1 quedan sin CUPS.
+        "cups": codigo.str.extract(r"^(\d{6})(?:[A-Za-z]+\d*)?$", expand=False),
         "descripcion": texto(partes[1]) if 1 in partes.columns else None,
         "estadoOrden": texto(df["Estado"]),
         "fechaImpresion": a_fecha(df["Fecha expedicion"]),
