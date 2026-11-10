@@ -382,16 +382,24 @@ def engine():
                          pool_pre_ping=True)
 
 
+def eps_publica(eps):
+    """Codigo de la EPS acordado con Coco (SALUD TOTAL -> SALUD_TOTAL). Es el que va en cargas,
+    porque de ahi lo toma desarrollo para la notificacion. En autorizaciones y en las tablas de
+    homologacion se mantiene el nombre interno (con espacio)."""
+    return eps.replace(" ", "_")
+
+
 def archivo_ya_cargado(cnx, eps, archivo):
-    sql = text("SELECT COUNT(*) FROM cargas WHERE eps = :eps AND archivoOrigen = :archivo AND estado = 'OK'")
-    return cnx.execute(sql, {"eps": eps, "archivo": archivo}).scalar() > 0
+    # archivoOrigen ya incluye la carpeta de la EPS (SALUD_TOTAL/archivo.xlsx), asi que basta con el archivo
+    sql = text("SELECT COUNT(*) FROM cargas WHERE archivoOrigen = :archivo AND estado = 'OK'")
+    return cnx.execute(sql, {"archivo": archivo}).scalar() > 0
 
 
 def iniciar_carga(cnx, eps, archivo):
     """Registra la carga con un UUID publico (loadId) que desarrollo comparte con Coco."""
     load_id = str(uuid.uuid4())
     r = cnx.execute(text("INSERT INTO cargas (loadId, eps, archivoOrigen) VALUES (:load_id, :eps, :archivo)"),
-                    {"load_id": load_id, "eps": eps, "archivo": archivo})
+                    {"load_id": load_id, "eps": eps_publica(eps), "archivo": archivo})
     log.info(f"[{eps}] {archivo} | loadId {load_id}")
     return r.lastrowid
 
