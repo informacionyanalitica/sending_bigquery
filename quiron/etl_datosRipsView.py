@@ -24,8 +24,9 @@ CHUNK = 20000
 
 
 def getSqlServer():
+    driver = os.getenv("SQLSERVER_DRIVER", "ODBC Driver 17 for SQL Server")
     return pyodbc.connect(
-        "DRIVER={ODBC Driver 17 for SQL Server};"
+        f"DRIVER={{{driver}}};"
         f"SERVER={os.getenv('SQLSERVER_HOST')},{os.getenv('SQLSERVER_PORT')};"
         f"DATABASE={os.getenv('SQLSERVER_DB')};"
         f"UID={os.getenv('SQLSERVER_USER')};PWD={os.getenv('SQLSERVER_PASS', '')};"
